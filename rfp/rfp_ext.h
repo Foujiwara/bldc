@@ -1,16 +1,20 @@
 /*
 	RFP extras for the VESC firmware.
 
-	Three optional functions, each with its own switch in the "RFP Extras" custom
-	configuration page of VESC Tool. All are OFF by default: with every switch off the
-	firmware behaves exactly like the official one.
+	Optional functions set on the "RFP Extras" custom configuration page of VESC Tool.
+	With the default values the firmware behaves exactly like the official one.
 
 	  - Basic Duty Mode: duty control releases the motor (zero current) instead of braking
 	    when the requested duty drops below the present duty.
-	  - Hybrid current / duty: for relative current requests (apps, CAN), the duty is
-	    limited proportionally to the request and the current tapers off near the limit.
-	  - Smart Reverse: a negative relative current request brakes while rolling forward,
-	    then reverses at a limited duty reached with a ramp.
+	  - Hybrid current / duty (forward): the duty is limited proportionally to the request
+	    and the current tapers off near the limit.
+	  - Braking (Active / Regen Only) and Reverse (Current / None / Duty / Smart) handling of
+	    reverse requests, with their limits.
+	  - Tractor mode: virtual spring on the wheel position around an anchor that moves with
+	    the throttle (current or duty output).
+
+	Hybrid, braking, reverse and tractor act on relative current requests
+	(mc_interface_set_current_rel: ADC and PPM apps, VESC Remote, PAS, CAN).
 
 	This file is part of the VESC firmware (GPLv3).
  */
@@ -20,15 +24,19 @@
 
 #include <stdbool.h>
 
-// Load the saved configuration and register the "RFP Extras" custom config page.
+// Load the saved configuration, register the "RFP Extras" custom config page and start the
+// tractor thread.
 void rfp_ext_init(void);
 
 // True when Basic Duty Mode is enabled (read from the motor control loop).
 bool rfp_ext_basic_duty(void);
 
 // Called by mc_interface_set_current_rel. Returns true when the request was fully handled
-// (brake or reverse duty was commanded). Otherwise *val may have been reduced (hybrid mode)
-// and the caller continues with the normal current command.
+// (brake, duty or tractor). Otherwise *val may have been changed and the caller continues
+// with the normal current command.
 bool rfp_ext_current_rel(float *val);
+
+// One step of the tractor control (called every millisecond by the RFP thread; exported for tests).
+void rfp_ext_tractor_update(float dt);
 
 #endif /* RFP_EXT_H_ */
