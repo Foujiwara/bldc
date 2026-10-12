@@ -55,7 +55,8 @@ static bool m_coast = false;
 // Braking / reverse state
 static phase_t m_phase = PH_FWD;
 static float m_rev_level = 0.0;			// reverse current, duty or duty limit (ramped, magnitude)
-static float m_rev_duty_f = 0.0;		// reverse duty, filtered (Current, Duty Limited)
+static float m_speed_duty = 0.0;		// speed duty (back EMF), filtered
+static bool m_speed_duty_reset = true;
 
 // Re-press to reverse state
 static bool m_rev_armed = false;		// reverse armed: the next press reverses
@@ -302,7 +303,6 @@ static void set_phase(phase_t ph) {
 		// Duty, duty limit: the ramp starts from the present reverse duty (no jerk when already reversing)
 		const float rev_duty = fmaxf(-mc_interface_get_duty_cycle_now(), 0.0);
 		m_rev_level = m_conf.reverse_mode >= 2 ? rev_duty : 0.0;
-		m_rev_duty_f = rev_duty;
 	}
 	m_phase = ph;
 }
@@ -395,6 +395,35 @@ static void tractor_step(float dt, float req) {
 	}
 }
 
+// Duty that matches the present speed (back EMF / bus voltage), filtered over about 5 ms. The duty
+// limits use it instead of the applied duty: the applied duty also contains the R x I drop, so it
+// moves at once with the commanded current, and a current limited on it oscillates at an audible
+// frequency. Falls back to the applied duty when the flux linkage is not known.
+static float speed_duty(float dt) {
+	const volatile mc_configuration *cfg = mc_interface_get_configuration();
+	const float vin = mc_interface_get_input_voltage_filtered();
+	float d;
+
+	if (cfg->foc_motor_flux_linkage > 1e-6 && vin > 1.0) {
+		const float overmod = cfg->foc_overmod_factor > 0.1 ? cfg->foc_overmod_factor : 1.0;
+		// duty_now = |v| x 1.5 / Vbus x 2 / sqrt(3) / overmod, back EMF = w_e x flux
+		d = mc_interface_get_rpm() * (2.0 * M_PI / 60.0) * cfg->foc_motor_flux_linkage *
+				1.5 / vin * 1.1547005 / overmod;
+	} else {
+		d = mc_interface_get_duty_cycle_now();
+	}
+
+	if (m_speed_duty_reset) {
+		m_speed_duty_reset = false;
+		m_speed_duty = d;
+	}
+
+	float k = dt / 0.005;
+	utils_truncate_number(&k, 0.0, 1.0);
+	m_speed_duty += (d - m_speed_duty) * k;
+	return m_speed_duty;
+}
+
 // Reverse Ramp Time: the reverse level (magnitude) rises from 0 to full in rev_ramp, falls at once
 static float rev_ramp(float goal, float full, float dt) {
 	if (m_conf.rev_ramp <= 0.0 || m_rev_level >= goal) {
@@ -429,7 +458,7 @@ void rfp_ext_update(float dt) {
 	m_tr_active = false;
 
 	const volatile mc_configuration *cfg = mc_interface_get_configuration();
-	const float duty = mc_interface_get_duty_cycle_now();
+	const float duty = speed_duty(dt);
 	const float rpm = mc_interface_get_rpm();
 
 	if (c->braking_reverse_enable && c->rev_repress) {
@@ -502,12 +531,9 @@ void rfp_ext_update(float dt) {
 	case 3: { // Current, Duty Limited: full current, released above a duty limit set by the request
 		const float lim_full = c->rev_duty_max * cfg->l_max_duty;
 		const float lim = rev_ramp(-v * lim_full, lim_full, dt);
-		float k = dt / 0.005;
-		utils_truncate_number(&k, 0.0, 1.0);
-		m_rev_duty_f += (-duty - m_rev_duty_f) * k;
 		// Soft zone sized on the full limit (never narrow near zero: no on / off chatter)
 		const float band = fmaxf(c->rev_band * lim_full, 0.01);
-		float f = (lim - m_rev_duty_f) / band;
+		float f = (lim + duty) / band;
 		utils_truncate_number(&f, 0.0, 1.0);
 		out_current_rel(blend(-c->rev_cur_max * f, dt), v);
 	} break;
@@ -581,6 +607,7 @@ bool rfp_ext_current_rel(float *val) {
 		// New sequence: start from a clean state
 		m_phase = PH_FWD;
 		m_rev_level = 0.0;
+		m_speed_duty_reset = true;
 		m_trans_left = 0.0;
 		m_rev_armed = false;
 		m_arm_press = false;

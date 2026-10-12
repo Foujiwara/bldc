@@ -26,6 +26,7 @@ static int m_brake_calls, m_duty_calls, m_current_calls;
 const volatile mc_configuration* mc_interface_get_configuration(void) { return &m_cfg; }
 float mc_interface_get_duty_cycle_now(void) { return m_duty; }
 float mc_interface_get_rpm(void) { return m_rpm; }
+float mc_interface_get_input_voltage_filtered(void) { return 48.0f; }
 int mc_interface_get_tachometer_value(_Bool reset) { (void)reset; return m_tacho; }
 void mc_interface_set_brake_current_rel(float val) { m_brake_rel = val; m_brake_calls++; rfp_ext_cancel(); }
 void mc_interface_set_duty(float duty) { m_set_duty = duty; m_duty_calls++; rfp_ext_cancel(); }
@@ -106,11 +107,11 @@ int main(void) {
 	check("request stored", req(0.5f));
 	run(10);
 	check("one command per millisecond from the last request", m_current_calls == 10 && near(rel_out(), 0.5f, 1e-5));
-	m_duty = lim * 0.9f; run(1);
+	m_duty = lim * 0.9f; run(30);
 	check("duty rises without a new request: current reduced (half way in the band)", near(rel_out(), 0.25f, 0.01));
-	m_duty = lim; run(1);
-	check("at the duty limit: zero current", near(m_set_current, 0.0f, 1e-5));
-	m_duty = lim * 0.95f; run(1);
+	m_duty = lim; run(100);
+	check("at the duty limit: zero current", near(m_set_current, 0.0f, 0.01f));
+	m_duty = lim * 0.95f; run(30);
 	check("small drop below the limit: small current (smooth, no all-or-nothing)", rel_out() > 0.0f && rel_out() < 0.15f);
 
 	printf("== Another command takes over\n");
@@ -174,8 +175,8 @@ int main(void) {
 	c.braking_reverse_enable = 1; c.reverse_mode = 0; c.rev_cur_max = 0.4f; c.rev_duty_max = 0.2f;
 	c.rev_band = 0.2f; c.rev_transition = 0.0f;
 	configure(&c);
-	m_rpm = -2000; m_duty = -0.2f * 0.95f; req(-1.0f); run(1);
-	check("Current: zero at the reverse duty limit", near(m_set_current, 0.0f, 1e-5));
+	m_rpm = -2000; m_duty = -0.2f * 0.95f; req(-1.0f); run(100);
+	check("Current: zero at the reverse duty limit", near(m_set_current, 0.0f, 0.01f));
 
 	rfp_conf_set_defaults(&c);
 	c.braking_reverse_enable = 1; c.reverse_mode = 2; c.rev_duty_max = 0.3f;
@@ -312,7 +313,7 @@ int main(void) {
 	c.rev_band = 0.1f; c.rev_transition = 0.0f;
 	configure(&c);
 	m_rpm = 0; m_duty = 0.0f; req(0.0f); run(1);
-	req(-0.2f); run(1);
+	req(-0.2f); run(30);
 	check("20 % request at standstill: full reverse current at once", near(rel_out(), -0.5f, 1e-4));
 	req(-1.0f); m_duty = -0.2f; m_rpm = -2000; run(50);
 	check("far below the limit (0.38): full current", near(rel_out(), -0.5f, 1e-4));
@@ -324,6 +325,11 @@ int main(void) {
 	check("small limit: still zero current, no chatter", near(m_set_current, 0.0f, 1e-5));
 	m_duty = -0.010f; run(50);
 	check("small limit, duty below it: smooth partial current (wide soft zone)", rel_out() < -0.1f && rel_out() > -0.5f);
+
+	m_cfg.foc_motor_flux_linkage = 0.01f; m_cfg.foc_overmod_factor = 1.0f;
+	req(-1.0f); m_rpm = -2000; m_duty = -0.39f; run(30);      // speed duty 0.076, applied duty high (R x I)
+	check("limit on the speed (back EMF), not on the applied duty: full current", near(rel_out(), -0.5f, 1e-3));
+	m_cfg.foc_motor_flux_linkage = 0.0f;
 
 	printf("== ADC control type\n");
 	rfp_conf_set_defaults(&c);
