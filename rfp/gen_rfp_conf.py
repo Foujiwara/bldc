@@ -57,6 +57,9 @@ PARAMS = [
     F("hybrid_band", "Current Taper Band",
       "Part of the duty limit over which the current decreases to zero.", 0.15, 0.02, 0.6, 0.01, 0, " %", True),
     # ---------------------------------------------------------------- braking / reverse
+    B("braking_reverse_enable", "Braking / Reverse Handling",
+      "On: the Braking and Reverse settings below apply to reverse requests (negative relative current). "
+      "Off: official behaviour (negative current, then reverse at full current). " + REL),
     E("braking_mode", "Braking",
       "Reverse request while rolling forward faster than Stop ERPM. Active: negative current as in the official "
       "firmware: torque against the motion, current injected from the battery when regeneration is not enough, "
@@ -73,6 +76,12 @@ PARAMS = [
       "Below this speed the vehicle is considered stopped: end of braking, start of the reverse handling. "
       "Sensorless motors: keep a few hundred ERPM (speed reading is noisy near standstill).",
       300.0, 0.0, 10000.0, 10.0, 0, " ERPM"),
+    F("stop_hyst", "Stop ERPM Hysteresis",
+      "Once reversing (below Stop ERPM), braking resumes only above Stop ERPM x (1 + this value). Avoids "
+      "switching back and forth around Stop ERPM.", 0.5, 0.0, 3.0, 0.05, 0, " %", True),
+    F("rev_transition", "Brake / Reverse Transition Time",
+      "Time over which the current moves from the braking value to the reverse value (and back), instead of a "
+      "sudden change of sign. 0 = immediate.", 0.2, 0.0, 2.0, 0.05, 2, " s"),
     F("brake_taper_start_erpm", "Braking Taper Start ERPM",
       "Active braking: below this speed the braking current decreases, down to Braking Taper Min at Stop ERPM. "
       "Limits the overshoot into reverse.", 1500.0, 0.0, 30000.0, 10.0, 0, " ERPM"),
@@ -103,13 +112,16 @@ PARAMS = [
     B("smart_repress", "Smart Reverse: Re-press to Reverse",
       "Reverse = Smart: after braking to a stop, return to neutral and request reverse again to start reversing."),
     # ---------------------------------------------------------------- tractor
-    E("tractor_mode", "Tractor Mode",
+    B("tractor_enable", "Tractor Mode",
+      "On: the throttle (relative current request) drives the tractor spring below instead of the motor "
+      "current. Off: normal operation. " + REL),
+    E("tractor_mode", "Tractor Output",
       "Virtual spring on the wheel position (tachometer). An anchor position is held with zero throttle and "
       "moves with the throttle. Within Freedom of the anchor the motor is free; beyond, a force proportional to "
       "the distance pulls the wheel back (Stiffness). Brake opposes the free motion. For stairs, mud... "
-      "Spring Current: output in current. Spring Duty: output in duty (to try). The throttle (relative current "
-      "request) drives the anchor speed; braking requests (brake current) are not handled. " + REL,
-      ["Off", "Spring Current", "Spring Duty"]),
+      "Spring Current: output in current. Spring Duty: output in duty (to try). Any other command (brake, "
+      "duty, keyboard, timeout) stops the tractor at once.",
+      ["Spring Current", "Spring Duty"]),
     E("tractor_speed_mode", "Tractor Speed",
       "Throttle: anchor speed proportional to the throttle, up to Tractor Max ERPM. Preset: the anchor moves "
       "at Tractor Max ERPM as soon as the throttle is pressed (direction given by its sign).",
@@ -142,12 +154,13 @@ GROUPING = [
     ("General", [
         ("Duty", ["::sep::Basic Duty Mode", "basic_duty_enable"]),
         ("Forward", ["::sep::Hybrid Current / Duty", "hybrid_enable", "hybrid_duty_limit", "hybrid_band"]),
-        ("Braking / Reverse", ["::sep::Braking", "braking_mode", "stop_erpm", "brake_taper_start_erpm",
+        ("Braking / Reverse", ["::sep::Braking / Reverse", "braking_reverse_enable", "stop_erpm", "stop_hyst",
+                               "rev_transition", "::sep::Braking", "braking_mode", "brake_taper_start_erpm",
                                "brake_taper_min", "::sep::Reverse", "reverse_mode", "::sep::Reverse = Current",
                                "rev_cur_max", "rev_cur_duty_max", "rev_band", "::sep::Reverse = Duty",
                                "rev_duty_max", "::sep::Reverse = Smart", "smart_cur_max", "smart_duty_max",
                                "smart_ramp", "smart_repress"]),
-        ("Tractor", ["::sep::Tractor Mode", "tractor_mode", "tractor_speed_mode", "tractor_max_erpm",
+        ("Tractor", ["::sep::Tractor Mode", "tractor_enable", "tractor_mode", "tractor_speed_mode", "tractor_max_erpm",
                      "tractor_freedom", "tractor_max_lag", "::sep::Spring Current", "tractor_stiffness",
                      "tractor_brake", "tractor_max_current", "::sep::Spring Duty", "tractor_duty_stiffness",
                      "tractor_duty_brake", "tractor_max_duty"]),

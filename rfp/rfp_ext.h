@@ -25,18 +25,23 @@
 #include <stdbool.h>
 
 // Load the saved configuration, register the "RFP Extras" custom config page and start the
-// tractor thread.
+// RFP thread (continuous computation, 1 kHz).
 void rfp_ext_init(void);
 
 // True when Basic Duty Mode is enabled (read from the motor control loop).
 bool rfp_ext_basic_duty(void);
 
-// Called by mc_interface_set_current_rel. Returns true when the request was fully handled
-// (brake, duty or tractor). Otherwise *val may have been changed and the caller continues
-// with the normal current command.
+// Called by mc_interface_set_current_rel. When hybrid, braking / reverse or tractor is enabled the
+// request is stored and true is returned: the RFP thread then computes the motor command from the
+// last request every millisecond. Otherwise false is returned and nothing changes.
 bool rfp_ext_current_rel(float *val);
 
-// One step of the tractor control (called every millisecond by the RFP thread; exported for tests).
-void rfp_ext_tractor_update(float dt);
+// Called by every other mc_interface motor command (current, brake, duty, release...): stops the
+// continuous computation, so that command takes over (commands from the RFP thread are ignored).
+void rfp_ext_cancel(void);
+
+// One step of the continuous computation (called every millisecond by the RFP thread; exported
+// for tests).
+void rfp_ext_update(float dt);
 
 #endif /* RFP_EXT_H_ */

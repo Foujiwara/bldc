@@ -93,6 +93,18 @@ p, li { white-space: pre-wrap; }
             <suffix> %</suffix>
             <vTx>9</vTx>
         </hybrid_band>
+        <braking_reverse_enable>
+            <longName>Braking / Reverse Handling</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;On: the Braking and Reverse settings below apply to reverse requests (negative relative current). Off: official behaviour (negative current, then reverse at full current). Applies to relative current requests: ADC and PPM apps, VESC Remote, PAS, CAN. The VESC Tool keyboard (absolute current) is not affected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>RFP_BRAKING_REVERSE_ENABLE</cDefine>
+            <valInt>0</valInt>
+        </braking_reverse_enable>
         <braking_mode>
             <longName>Braking</longName>
             <type>4</type>
@@ -145,6 +157,50 @@ p, li { white-space: pre-wrap; }
             <suffix> ERPM</suffix>
             <vTx>9</vTx>
         </stop_erpm>
+        <stop_hyst>
+            <longName>Stop ERPM Hysteresis</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Once reversing (below Stop ERPM), braking resumes only above Stop ERPM x (1 + this value). Avoids switching back and forth around Stop ERPM.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>RFP_STOP_HYST</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>100</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>3</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>5</stepDouble>
+            <valDouble>0.5</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> %</suffix>
+            <vTx>9</vTx>
+        </stop_hyst>
+        <rev_transition>
+            <longName>Brake / Reverse Transition Time</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Time over which the current moves from the braking value to the reverse value (and back), instead of a sudden change of sign. 0 = immediate.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>RFP_REV_TRANSITION</cDefine>
+            <editorDecimalsDouble>2</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>2</maxDouble>
+            <minDouble>0</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.05</stepDouble>
+            <valDouble>0.2</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>9</vTx>
+        </rev_transition>
         <brake_taper_start_erpm>
             <longName>Braking Taper Start ERPM</longName>
             <type>1</type>
@@ -355,18 +411,29 @@ p, li { white-space: pre-wrap; }
             <cDefine>RFP_SMART_REPRESS</cDefine>
             <valInt>0</valInt>
         </smart_repress>
-        <tractor_mode>
+        <tractor_enable>
             <longName>Tractor Mode</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;On: the throttle (relative current request) drives the tractor spring below instead of the motor current. Off: normal operation. Applies to relative current requests: ADC and PPM apps, VESC Remote, PAS, CAN. The VESC Tool keyboard (absolute current) is not affected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>RFP_TRACTOR_ENABLE</cDefine>
+            <valInt>0</valInt>
+        </tractor_enable>
+        <tractor_mode>
+            <longName>Tractor Output</longName>
             <type>4</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Virtual spring on the wheel position (tachometer). An anchor position is held with zero throttle and moves with the throttle. Within Freedom of the anchor the motor is free; beyond, a force proportional to the distance pulls the wheel back (Stiffness). Brake opposes the free motion. For stairs, mud... Spring Current: output in current. Spring Duty: output in duty (to try). The throttle (relative current request) drives the anchor speed; braking requests (brake current) are not handled. Applies to relative current requests: ADC and PPM apps, VESC Remote, PAS, CAN. The VESC Tool keyboard (absolute current) is not affected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Virtual spring on the wheel position (tachometer). An anchor position is held with zero throttle and moves with the throttle. Within Freedom of the anchor the motor is free; beyond, a force proportional to the distance pulls the wheel back (Stiffness). Brake opposes the free motion. For stairs, mud... Spring Current: output in current. Spring Duty: output in duty (to try). Any other command (brake, duty, keyboard, timeout) stops the tractor at once.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_TRACTOR_MODE</cDefine>
             <valInt>0</valInt>
-            <enumNames>Off</enumNames>
             <enumNames>Spring Current</enumNames>
             <enumNames>Spring Duty</enumNames>
         </tractor_mode>
@@ -588,9 +655,12 @@ p, li { white-space: pre-wrap; }
         <ser>hybrid_enable</ser>
         <ser>hybrid_duty_limit</ser>
         <ser>hybrid_band</ser>
+        <ser>braking_reverse_enable</ser>
         <ser>braking_mode</ser>
         <ser>reverse_mode</ser>
         <ser>stop_erpm</ser>
+        <ser>stop_hyst</ser>
+        <ser>rev_transition</ser>
         <ser>brake_taper_start_erpm</ser>
         <ser>brake_taper_min</ser>
         <ser>rev_cur_max</ser>
@@ -601,6 +671,7 @@ p, li { white-space: pre-wrap; }
         <ser>smart_duty_max</ser>
         <ser>smart_ramp</ser>
         <ser>smart_repress</ser>
+        <ser>tractor_enable</ser>
         <ser>tractor_mode</ser>
         <ser>tractor_speed_mode</ser>
         <ser>tractor_max_erpm</ser>
@@ -635,9 +706,13 @@ p, li { white-space: pre-wrap; }
             <subgroup>
                 <subgroupName>Braking / Reverse</subgroupName>
                 <subgroupParams>
+                    <param>::sep::Braking / Reverse</param>
+                    <param>braking_reverse_enable</param>
+                    <param>stop_erpm</param>
+                    <param>stop_hyst</param>
+                    <param>rev_transition</param>
                     <param>::sep::Braking</param>
                     <param>braking_mode</param>
-                    <param>stop_erpm</param>
                     <param>brake_taper_start_erpm</param>
                     <param>brake_taper_min</param>
                     <param>::sep::Reverse</param>
@@ -659,6 +734,7 @@ p, li { white-space: pre-wrap; }
                 <subgroupName>Tractor</subgroupName>
                 <subgroupParams>
                     <param>::sep::Tractor Mode</param>
+                    <param>tractor_enable</param>
                     <param>tractor_mode</param>
                     <param>tractor_speed_mode</param>
                     <param>tractor_max_erpm</param>

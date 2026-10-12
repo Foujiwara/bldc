@@ -1,6 +1,6 @@
 #ifndef STUB_MC_INTERFACE_H_
 #define STUB_MC_INTERFACE_H_
-typedef struct { float l_max_duty; float lo_current_max; } mc_configuration;
+typedef struct { float l_max_duty; float lo_current_max; float lo_current_min; float l_abs_current_max; float cc_min_current; } mc_configuration;
 const volatile mc_configuration* mc_interface_get_configuration(void);
 float mc_interface_get_duty_cycle_now(void);
 float mc_interface_get_rpm(void);

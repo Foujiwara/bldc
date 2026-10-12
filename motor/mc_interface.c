@@ -557,6 +557,7 @@ mc_control_mode mc_interface_get_control_mode(void) {
 }
 
 void mc_interface_set_duty(float dutyCycle) {
+	rfp_ext_cancel(); // RFP extras: another command takes over
 	if (fabsf(dutyCycle) > 0.001) {
 		SHUTDOWN_RESET();
 	}
@@ -583,6 +584,7 @@ void mc_interface_set_duty(float dutyCycle) {
 }
 
 void mc_interface_set_duty_noramp(float dutyCycle) {
+	rfp_ext_cancel(); // RFP extras: another command takes over
 	if (fabsf(dutyCycle) > 0.001) {
 		SHUTDOWN_RESET();
 	}
@@ -609,6 +611,7 @@ void mc_interface_set_duty_noramp(float dutyCycle) {
 }
 
 void mc_interface_set_pid_speed(float rpm) {
+	rfp_ext_cancel(); // RFP extras: another command takes over
 	if (fabsf(rpm) > 0.001) {
 		SHUTDOWN_RESET();
 	}
@@ -635,6 +638,7 @@ void mc_interface_set_pid_speed(float rpm) {
 }
 
 void mc_interface_set_pid_pos(float pos) {
+	rfp_ext_cancel(); // RFP extras: another command takes over
 	SHUTDOWN_RESET();
 
 	if (mc_interface_try_input()) {
@@ -674,6 +678,7 @@ void mc_interface_set_pid_pos(float pos) {
 }
 
 void mc_interface_set_current(float current) {
+	rfp_ext_cancel(); // RFP extras: another command takes over
 	if (fabsf(current) > 0.001) {
 		SHUTDOWN_RESET();
 	}
@@ -700,6 +705,7 @@ void mc_interface_set_current(float current) {
 }
 
 void mc_interface_set_brake_current(float current) {
+	rfp_ext_cancel(); // RFP extras: another command takes over
 	if (fabsf(current) > 0.001) {
 		SHUTDOWN_RESET();
 	}
@@ -782,6 +788,7 @@ void mc_interface_set_brake_current_rel(float val) {
  * The current value.
  */
 void mc_interface_set_handbrake(float current) {
+	rfp_ext_cancel(); // RFP extras: another command takes over
 	if (fabsf(current) > 0.001) {
 		SHUTDOWN_RESET();
 	}
@@ -823,6 +830,7 @@ void mc_interface_set_handbrake_rel(float val) {
 }
 
 void mc_interface_set_openloop_current(float current, float rpm) {
+	rfp_ext_cancel(); // RFP extras: another command takes over
 	if (fabsf(current) > 0.001) {
 		SHUTDOWN_RESET();
 	}
@@ -847,6 +855,7 @@ void mc_interface_set_openloop_current(float current, float rpm) {
 	events_add("set_openloop_current", current);
 }
 void mc_interface_set_openloop_phase(float current, float phase){
+	rfp_ext_cancel(); // RFP extras: another command takes over
 	if (fabsf(current) > 0.001) {
 		SHUTDOWN_RESET();
 	}
@@ -871,6 +880,7 @@ void mc_interface_set_openloop_phase(float current, float phase){
 	events_add("set_openloop_phase", phase);
 }
 void mc_interface_set_openloop_duty(float dutyCycle, float rpm){
+	rfp_ext_cancel(); // RFP extras: another command takes over
 	if (fabsf(dutyCycle) > 0.001) {
 		SHUTDOWN_RESET();
 	}
@@ -895,6 +905,7 @@ void mc_interface_set_openloop_duty(float dutyCycle, float rpm){
 	events_add("set_openloop_duty", dutyCycle);
 }
 void mc_interface_set_openloop_duty_phase(float dutyCycle, float phase){
+	rfp_ext_cancel(); // RFP extras: another command takes over
 	if (fabsf(dutyCycle) > 0.001) {
 		SHUTDOWN_RESET();
 	}
@@ -929,6 +940,7 @@ void mc_interface_brake_now(void) {
  * Disconnect the motor and let it turn freely.
  */
 void mc_interface_release_motor(void) {
+	rfp_ext_cancel(); // RFP extras: another command takes over
 	if (mc_interface_try_input()) {
 		return;
 	}
@@ -951,6 +963,7 @@ void mc_interface_release_motor(void) {
 }
 
 void mc_interface_release_motor_override(void) {
+	rfp_ext_cancel(); // RFP extras: another command takes over
 	switch (motor_now()->m_conf.motor_type) {
 	case MOTOR_TYPE_BLDC:
 	case MOTOR_TYPE_DC:

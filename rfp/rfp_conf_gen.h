@@ -7,7 +7,7 @@
 
 // braking_mode : 0 = Active (negative current), 1 = Regen Only (brake)
 // reverse_mode : 0 = Current, 1 = None, 2 = Duty, 3 = Smart
-// tractor_mode : 0 = Off, 1 = Spring Current, 2 = Spring Duty
+// tractor_mode : 0 = Spring Current, 1 = Spring Duty
 // tractor_speed_mode : 0 = Throttle, 1 = Preset
 
 typedef struct {
@@ -15,9 +15,12 @@ typedef struct {
 	bool hybrid_enable;
 	float hybrid_duty_limit;
 	float hybrid_band;
+	bool braking_reverse_enable;
 	uint8_t braking_mode;
 	uint8_t reverse_mode;
 	float stop_erpm;
+	float stop_hyst;
+	float rev_transition;
 	float brake_taper_start_erpm;
 	float brake_taper_min;
 	float rev_cur_max;
@@ -28,6 +31,7 @@ typedef struct {
 	float smart_duty_max;
 	float smart_ramp;
 	bool smart_repress;
+	bool tractor_enable;
 	uint8_t tractor_mode;
 	uint8_t tractor_speed_mode;
 	float tractor_max_erpm;
@@ -41,9 +45,9 @@ typedef struct {
 	float tractor_max_duty;
 } rfp_config;
 
-#define RFP_CONFIG_SIGNATURE	2497175494u
-#define RFP_CONF_SER_SIZE	95
-#define RFP_CONF_XML_SIZE	3996
+#define RFP_CONFIG_SIGNATURE	2680818977u
+#define RFP_CONF_SER_SIZE	105
+#define RFP_CONF_XML_SIZE	4413
 
 int32_t rfp_conf_serialize(uint8_t *buffer, const rfp_config *conf);
 bool rfp_conf_deserialize(const uint8_t *buffer, rfp_config *conf);
