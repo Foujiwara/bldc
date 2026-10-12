@@ -17,7 +17,7 @@ typedef struct {
 } rfp_config;
 
 #define RFP_CONFIG_SIGNATURE	3742035091u
-#define RFP_CONF_XML_SIZE	2099
+#define RFP_CONF_XML_SIZE	2103
 
 int32_t rfp_conf_serialize(uint8_t *buffer, const rfp_config *conf);
 bool rfp_conf_deserialize(const uint8_t *buffer, rfp_config *conf);

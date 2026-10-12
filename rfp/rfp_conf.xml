@@ -184,7 +184,7 @@ p, li { white-space: pre-wrap; }
     </SerOrder>
     <Grouping>
         <group>
-            <groupName>RFP</groupName>
+            <groupName>General</groupName>
             <subgroup>
                 <subgroupName>Duty</subgroupName>
                 <subgroupParams>

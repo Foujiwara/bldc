@@ -65,9 +65,10 @@ PARAMS = [
      3.0, 0.01, 20.0, 0.1, 2, " s"),
 ]
 
-# page : groupe -> sous-onglets -> elements (nom de parametre ou ::sep::Titre)
+# page : groupe -> sous-onglets -> elements (nom de parametre ou ::sep::Titre). VESC Tool (bureau et
+# mobile) ne construit la page qu'a partir du groupe nomme exactement "General".
 GROUPING = [
-    ("RFP", [
+    ("General", [
         ("Duty", ["::sep::Basic Duty Mode", "basic_duty_enable"]),
         ("Current", ["::sep::Hybrid Current / Duty", "hybrid_enable", "hybrid_duty_limit", "hybrid_band",
                      "::sep::Smart Reverse", "smart_rev_enable", "smart_rev_erpm", "smart_rev_max_duty",
