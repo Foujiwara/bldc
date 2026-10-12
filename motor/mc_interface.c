@@ -43,6 +43,7 @@
 #include "events.h"
 #include "timer.h"
 #include "confgenerator.h"
+#include "rfp_ext.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -738,13 +739,19 @@ void mc_interface_set_current_rel(float val) {
 	volatile mc_configuration *cfg = &motor_now()->m_conf;
 	float duty = mc_interface_get_duty_cycle_now();
 
+	// RFP extras: smart reverse (brake or limited-duty reverse) and hybrid current / duty
+	const float val_request = val;
+	if (rfp_ext_current_rel(&val)) {
+		return;
+	}
+
 	if (fabsf(duty) < 0.02 || SIGN(val) == SIGN(duty)) {
 		mc_interface_set_current(val * cfg->lo_current_max);
 	} else {
 		mc_interface_set_current(val * fabsf(cfg->lo_current_min));
 	}
 
-	if (fabsf(val * cfg->l_abs_current_max) > cfg->cc_min_current) {
+	if (fabsf(val_request * cfg->l_abs_current_max) > cfg->cc_min_current) {
 		mc_interface_set_current_off_delay(0.1);
 	}
 }

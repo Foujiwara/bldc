@@ -29,6 +29,13 @@ void conf_custom_add_config(
 		bool (*set_cfg)(uint8_t *data),
 		int (*get_cfg_xml)(uint8_t **data));
 void conf_custom_clear_configs(void);
+
+// Built-in custom configuration (not cleared by conf_custom_clear_configs). It comes after the
+// dynamic one (LispBM packages) in the list shown by VESC Tool, so both can coexist.
+void conf_custom_add_builtin_config(
+		int (*get_cfg)(uint8_t *data, bool is_default),
+		bool (*set_cfg)(uint8_t *data),
+		int (*get_cfg_xml)(uint8_t **data));
 int conf_custom_cfg_num(void);
 int conf_custom_get_cfg_xml(int conf_ind, uint8_t **data);
 void conf_custom_process_cmd(unsigned char *data, unsigned int len,

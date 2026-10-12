@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include "virtual_motor.h"
 #include "foc_math.h"
+#include "rfp_ext.h"
 
 // Private variables
 static volatile bool m_dccal_done = false;
@@ -3405,21 +3406,28 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 					}
 				}
 
-				// Compute error
-				float error = duty_set - state_now->duty_now;
+				if (motor_now->m_control_mode == CONTROL_MODE_DUTY && rfp_ext_basic_duty()) {
+					// RFP Basic Duty Mode: release the motor (zero current, no braking) until the
+					// duty has fallen to the requested value
+					motor_now->m_duty_i_term = state_now->iq / current_max_for_duty;
+					iq_set_tmp = 0.0;
+				} else {
+					// Compute error
+					float error = duty_set - state_now->duty_now;
 
-				// Compute parameters
-				float scale = 1.0 / state_now->v_bus;
-				float p_term = error * conf_now->foc_duty_dowmramp_kp * scale;
-				motor_now->m_duty_i_term += error * (conf_now->foc_duty_dowmramp_ki * dt) * scale;
+					// Compute parameters
+					float scale = 1.0 / state_now->v_bus;
+					float p_term = error * conf_now->foc_duty_dowmramp_kp * scale;
+					motor_now->m_duty_i_term += error * (conf_now->foc_duty_dowmramp_ki * dt) * scale;
 
-				// I-term wind-up protection
-				utils_truncate_number((float*)&motor_now->m_duty_i_term, -1.0, 1.0);
+					// I-term wind-up protection
+					utils_truncate_number((float*)&motor_now->m_duty_i_term, -1.0, 1.0);
 
-				// Calculate output
-				float output = p_term + motor_now->m_duty_i_term;
-				utils_truncate_number(&output, -1.0, 1.0);
-				iq_set_tmp = output * current_max_for_duty;
+					// Calculate output
+					float output = p_term + motor_now->m_duty_i_term;
+					utils_truncate_number(&output, -1.0, 1.0);
+					iq_set_tmp = output * current_max_for_duty;
+				}
 			} else {
 				// If the duty cycle is less than or equal to the set duty cycle just limit
 				// the modulation and use the maximum allowed current.

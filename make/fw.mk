@@ -147,7 +147,9 @@ CSRC = $(STARTUPSRC) \
        $(BLACKMAGICSRC) \
        qmlui/qmlui.c \
        $(ENCSRC) \
-       conf_custom.c
+       conf_custom.c \
+       rfp/rfp_ext.c \
+       rfp/rfp_conf_gen.c
 
 ifeq ($(USE_LISPBM),1)
   CSRC += $(LISPBMSRC)
@@ -192,6 +194,7 @@ INCDIR = $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
          qmlui \
          qmlui/hw \
          qmlui/app \
+         rfp \
          $(ENCINC)
 
 include comm/comm.mk

@@ -31,6 +31,37 @@ static int (*m_get_cfg)(uint8_t *data, bool is_default) = 0;
 static bool (*m_set_cfg)(uint8_t *data) = 0;
 static int (*m_get_cfg_xml)(uint8_t **data) = 0;
 
+// Built-in configuration (second slot)
+static int (*m_b_get_cfg)(uint8_t *data, bool is_default) = 0;
+static bool (*m_b_set_cfg)(uint8_t *data) = 0;
+static int (*m_b_get_cfg_xml)(uint8_t **data) = 0;
+
+// Index shown to VESC Tool -> slot: 0 = dynamic, 1 = built-in. Only existing slots are listed, in order.
+static int slot_from_index(int conf_ind) {
+	int n = 0;
+	if (m_get_cfg_xml != 0) {
+		if (conf_ind == n) {
+			return 0;
+		}
+		n++;
+	}
+	if (m_b_get_cfg_xml != 0) {
+		if (conf_ind == n) {
+			return 1;
+		}
+	}
+	return -1;
+}
+
+void conf_custom_add_builtin_config(
+		int (*get_cfg)(uint8_t *data, bool is_default),
+		bool (*set_cfg)(uint8_t *data),
+		int (*get_cfg_xml)(uint8_t **data)) {
+	m_b_get_cfg = get_cfg;
+	m_b_set_cfg = set_cfg;
+	m_b_get_cfg_xml = get_cfg_xml;
+}
+
 void conf_custom_add_config(
 		int (*get_cfg)(uint8_t *data, bool is_default),
 		bool (*set_cfg)(uint8_t *data),
@@ -59,7 +90,16 @@ int conf_custom_cfg_num(void) {
 		m_get_cfg_xml(&xml_data);
 
 		if (utils_is_func_valid(xml_data)) {
-			res = 1;
+			res++;
+		}
+	}
+
+	if (m_b_get_cfg_xml) {
+		uint8_t *xml_data = 0;
+		m_b_get_cfg_xml(&xml_data);
+
+		if (xml_data != 0) {
+			res++;
 		}
 	}
 
@@ -67,11 +107,11 @@ int conf_custom_cfg_num(void) {
 }
 
 int conf_custom_get_cfg_xml(int conf_ind, uint8_t **data) {
-	if (conf_ind != 0 || m_get_cfg_xml == 0) {
-		return 0;
+	switch (slot_from_index(conf_ind)) {
+	case 0: return m_get_cfg_xml(data);
+	case 1: return m_b_get_cfg_xml(data);
+	default: return 0;
 	}
-
-	return m_get_cfg_xml(data);
 }
 
 void conf_custom_process_cmd(unsigned char *data, unsigned int len,
@@ -87,12 +127,13 @@ void conf_custom_process_cmd(unsigned char *data, unsigned int len,
 	case COMM_GET_CUSTOM_CONFIG:
 	case COMM_GET_CUSTOM_CONFIG_DEFAULT: {
 		int conf_ind = data[0];
-		if (m_get_cfg && conf_ind == 0) {
+		int slot = slot_from_index(conf_ind);
+		if (slot >= 0) {
 			uint8_t *send_buffer = mempools_get_packet_buffer();
 			int32_t ind = 0;
 			send_buffer[ind++] = packet_id;
 			send_buffer[ind++] = conf_ind;
-			int32_t len_cfg = m_get_cfg(send_buffer + ind, packet_id == COMM_GET_CUSTOM_CONFIG_DEFAULT);
+			int32_t len_cfg = (slot == 0 ? m_get_cfg : m_b_get_cfg)(send_buffer + ind, packet_id == COMM_GET_CUSTOM_CONFIG_DEFAULT);
 			ind += len_cfg;
 			reply_func(send_buffer, ind);
 			mempools_free_packet_buffer(send_buffer);
@@ -101,8 +142,9 @@ void conf_custom_process_cmd(unsigned char *data, unsigned int len,
 
 	case COMM_SET_CUSTOM_CONFIG: {
 		int conf_ind = data[0];
-		if (m_set_cfg && conf_ind == 0) {
-			m_set_cfg(data + 1);
+		int slot = slot_from_index(conf_ind);
+		if (slot >= 0) {
+			(slot == 0 ? m_set_cfg : m_b_set_cfg)(data + 1);
 			int32_t ind = 0;
 			uint8_t send_buffer[50];
 			send_buffer[ind++] = packet_id;
@@ -114,8 +156,9 @@ void conf_custom_process_cmd(unsigned char *data, unsigned int len,
 		int32_t ind = 0;
 
 		int conf_ind = data[ind++];
+		int slot = slot_from_index(conf_ind);
 
-		if (conf_ind != 0 || m_get_cfg_xml == 0) {
+		if (slot < 0) {
 			break;
 		}
 
@@ -123,7 +166,7 @@ void conf_custom_process_cmd(unsigned char *data, unsigned int len,
 		int32_t ofs_conf = buffer_get_int32(data, &ind);
 
 		uint8_t *xml_data = 0;
-		int xml_len = m_get_cfg_xml(&xml_data);
+		int xml_len = (slot == 0 ? m_get_cfg_xml : m_b_get_cfg_xml)(&xml_data);
 
 		if ((len_conf + ofs_conf) > xml_len || len_conf > (PACKET_MAX_PL_LEN - 10)) {
 			break;

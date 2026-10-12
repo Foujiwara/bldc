@@ -50,6 +50,7 @@
 #include "imu.h"
 #include "flash_helper.h"
 #include "conf_custom.h"
+#include "rfp_ext.h"
 #include "crc.h"
 #include "qmlui.h"
 #include "confgenerator.h"
@@ -340,6 +341,8 @@ int main(void) {
 
 	ledpwm_init();
 	mc_interface_init(cfg_reset);
+
+	rfp_ext_init();
 
 	commands_init();
 
