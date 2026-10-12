@@ -50,75 +50,73 @@ PARAMS = [
     B("hybrid_enable", "Hybrid Current / Duty (forward)",
       "Forward requests: the duty is limited proportionally to the throttle, so half throttle gives half torque "
       "and, without load, about half speed. Duty limit = throttle x Duty Limit at Full Throttle x Maximum Duty "
-      "Cycle. The current decreases linearly over the Current Taper Band below the limit and is zero at the "
+      "Cycle. The current decreases linearly over the Soft Zone Before Duty Limit and is zero at the "
       "limit. " + REL),
-    F("hybrid_duty_limit", "Duty Limit at Full Throttle",
-      "Duty limit at full throttle, as a fraction of Maximum Duty Cycle.", 1.0, 0.05, 1.0, 0.01, 0, " %", True),
-    F("hybrid_band", "Current Taper Band",
-      "Part of the duty limit over which the current decreases to zero.", 0.15, 0.02, 0.6, 0.01, 0, " %", True),
+    F("hybrid_duty_limit", "Max Duty at Full Throttle",
+      "Duty limit (about the speed) at full throttle, as a fraction of Maximum Duty Cycle.", 1.0, 0.05, 1.0, 0.01, 0, " %", True),
+    F("hybrid_band", "Soft Zone Before Duty Limit",
+      "Zone below the duty limit, as a part of it, where the current decreases progressively to zero. Wider = "
+      "softer arrival at the speed.", 0.15, 0.02, 0.6, 0.01, 0, " %", True),
     # ---------------------------------------------------------------- braking / reverse
     B("braking_reverse_enable", "Braking / Reverse Handling",
-      "On: the Braking and Reverse settings below apply to reverse requests (negative relative current). "
+      "On: the Braking and Reverse settings apply to reverse requests (negative relative current). "
       "Off: official behaviour (negative current, then reverse at full current). " + REL),
-    E("braking_mode", "Braking",
-      "Reverse request while rolling forward faster than Stop ERPM. Active: negative current as in the official "
-      "firmware: torque against the motion, current injected from the battery when regeneration is not enough, "
-      "down to Stop ERPM. Regen Only: brake current (as the No Reverse control types): regeneration only, "
-      "phases shorted when the current cannot be held. " + REL,
-      ["Active (negative current)", "Regen Only (brake)"]),
-    E("reverse_mode", "Reverse",
-      "Reverse request below Stop ERPM (stopped or already reversing). Current: reverse in current, limited by "
-      "the Reverse Current settings (100 % = official firmware). None: never reverse, zero current. Duty: "
-      "reverse in duty proportional to the request, up to Reverse Duty Max. Smart: reverse in current with a "
-      "duty limit proportional to the request, raised with a ramp. " + REL,
-      ["Current", "None", "Duty", "Smart"]),
     F("stop_erpm", "Stop ERPM",
       "Below this speed the vehicle is considered stopped: end of braking, start of the reverse handling. "
       "Sensorless motors: keep a few hundred ERPM (speed reading is noisy near standstill).",
       300.0, 0.0, 10000.0, 10.0, 0, " ERPM"),
-    F("stop_hyst", "Stop ERPM Hysteresis",
-      "Once reversing (below Stop ERPM), braking resumes only above Stop ERPM x (1 + this value). Avoids "
-      "switching back and forth around Stop ERPM.", 0.5, 0.0, 3.0, 0.05, 0, " %", True),
-    F("rev_transition", "Brake / Reverse Transition Time",
-      "Time over which the current moves from the braking value to the reverse value (and back), instead of a "
-      "sudden change of sign. 0 = immediate.", 0.2, 0.0, 2.0, 0.05, 2, " s"),
-    F("brake_taper_start_erpm", "Braking Taper Start ERPM",
-      "Active braking: below this speed the braking current decreases, down to Braking Taper Min at Stop ERPM. "
+    F("stop_hyst", "Re-brake Margin",
+      "Once reversing (below Stop ERPM), braking resumes only above Stop ERPM + this margin (in % of Stop ERPM). "
+      "Avoids switching back and forth around Stop ERPM.", 0.5, 0.0, 3.0, 0.05, 0, " %", True),
+    F("rev_transition", "Brake / Reverse Fade Time",
+      "Time over which the current fades from the braking value to the reverse value (and back), instead of a "
+      "sudden change. 0 = immediate.", 0.2, 0.0, 2.0, 0.05, 2, " s"),
+    E("braking_mode", "Braking Mode",
+      "Reverse request while rolling forward faster than Stop ERPM. Active: negative current as in the official "
+      "firmware: torque against the motion, current injected from the battery when regeneration is not enough, "
+      "down to Stop ERPM. Regen Only: brake current (as the No Reverse control types): regeneration only, "
+      "phases shorted when the current cannot be held.",
+      ["Active (negative current)", "Regen Only (brake)"]),
+    F("brake_taper_start_erpm", "Soft Stop Start ERPM",
+      "Active braking: below this speed the braking becomes softer, down to Braking Force at Stop at Stop ERPM. "
       "Limits the overshoot into reverse.", 1500.0, 0.0, 30000.0, 10.0, 0, " ERPM"),
-    F("brake_taper_min", "Braking Taper Min",
-      "Active braking: fraction of the braking current kept at Stop ERPM. 100 % = no reduction (official).",
+    F("brake_taper_min", "Braking Force at Stop",
+      "Active braking: braking force left at Stop ERPM, as a part of the request. 100 % = no softening (official).",
       1.0, 0.0, 1.0, 0.01, 0, " %", True),
+    E("reverse_mode", "Reverse Mode",
+      "Reverse request below Stop ERPM (stopped or already reversing). Current: reverse in current up to Reverse "
+      "Current Max, top reverse speed limited by Reverse Max Duty (100 % = official firmware). None: never "
+      "reverse, zero current. Duty: reverse duty = request x Reverse Max Duty; Basic Duty Mode applies when the "
+      "request is released. Both rise with Reverse Ramp Time.",
+      ["Current", "None", "Duty"]),
     F("rev_cur_max", "Reverse Current Max",
-      "Reverse = Current: reverse current at full request, as a fraction of the motor current limit.",
+      "Current: reverse current at full request, as a fraction of the motor current limit.",
       1.0, 0.0, 1.0, 0.01, 0, " %", True),
-    F("rev_cur_duty_max", "Reverse Current Duty Max",
-      "Reverse = Current: duty limit in reverse (top reverse speed), as a fraction of Maximum Duty Cycle. "
-      "The current decreases over the Reverse Taper Band below it. 100 % = no limit.",
-      1.0, 0.02, 1.0, 0.01, 0, " %", True),
-    F("rev_band", "Reverse Taper Band",
-      "Reverse = Current or Smart: part of the reverse duty limit over which the current decreases to zero.",
-      0.15, 0.02, 0.6, 0.01, 0, " %", True),
-    F("rev_duty_max", "Reverse Duty Max",
-      "Reverse = Duty: duty at full reverse request, as a fraction of Maximum Duty Cycle.",
-      1.0, 0.02, 1.0, 0.01, 0, " %", True),
-    F("smart_cur_max", "Smart Reverse Current Max",
-      "Reverse = Smart: reverse current at full request, as a fraction of the motor current limit.",
-      1.0, 0.0, 1.0, 0.01, 0, " %", True),
-    F("smart_duty_max", "Smart Reverse Duty Max",
-      "Reverse = Smart: duty limit at full reverse request, as a fraction of Maximum Duty Cycle.",
-      0.08, 0.02, 1.0, 0.01, 0, " %", True),
-    F("smart_ramp", "Smart Reverse Ramp Time",
-      "Reverse = Smart: time to raise the duty limit from 0 to Smart Reverse Duty Max.", 3.0, 0.01, 20.0, 0.1, 2, " s"),
-    B("smart_repress", "Smart Reverse: Re-press to Reverse",
-      "Reverse = Smart: after braking to a stop, return to neutral and request reverse again to start reversing."),
+    F("rev_duty_max", "Reverse Max Duty",
+      "Fraction of Maximum Duty Cycle. Current: top reverse speed (100 % = no limit). Duty: duty at full "
+      "reverse request.", 1.0, 0.02, 1.0, 0.01, 0, " %", True),
+    F("rev_band", "Soft Zone Before Reverse Limit",
+      "Current: zone below the top reverse speed (Reverse Max Duty), as a part of it, where the current "
+      "decreases progressively to zero.", 0.15, 0.02, 0.6, 0.01, 0, " %", True),
+    F("rev_ramp", "Reverse Ramp Time",
+      "Time for the reverse current (Current) or duty (Duty) to rise from 0 to its full value. It falls at once "
+      "when the request is reduced. 0 = no ramp (official).", 0.0, 0.0, 20.0, 0.1, 2, " s"),
+    B("rev_repress", "Re-press to Reverse",
+      "Current, Duty: braking never turns into reverse. To reverse: stopped, release to neutral, press "
+      "the brake once (above Reverse Arm Level) and release: reverse is armed, the next press reverses. Neutral "
+      "longer than Reverse Disarm Time, or any throttle, disarms."),
+    F("rev_arm_level", "Reverse Arm Level",
+      "Re-press to Reverse: brake level of the press that arms the reverse.", 0.95, 0.1, 1.0, 0.01, 0, " %", True),
+    F("rev_disarm_time", "Reverse Disarm Time",
+      "Re-press to Reverse: time in neutral after which the armed reverse is disarmed.", 2.0, 0.1, 30.0, 0.1, 1, " s"),
     # ---------------------------------------------------------------- tractor
     B("tractor_enable", "Tractor Mode",
       "On: the throttle (relative current request) drives the tractor spring below instead of the motor "
       "current. Off: normal operation. " + REL),
     E("tractor_mode", "Tractor Output",
       "Virtual spring on the wheel position (tachometer). An anchor position is held with zero throttle and "
-      "moves with the throttle. Within Freedom of the anchor the motor is free; beyond, a force proportional to "
-      "the distance pulls the wheel back (Stiffness). Brake opposes the free motion. For stairs, mud... "
+      "moves with the throttle. Within Free Play of the anchor the motor is free; beyond, a force proportional to "
+      "the distance pulls the wheel back (Stiffness). Damping opposes the free motion. For stairs, mud... "
       "Spring Current: output in current. Spring Duty: output in duty (to try). Any other command (brake, "
       "duty, keyboard, timeout) stops the tractor at once.",
       ["Spring Current", "Spring Duty"]),
@@ -128,22 +126,22 @@ PARAMS = [
       ["Throttle", "Preset"]),
     F("tractor_max_erpm", "Tractor Max ERPM", "Anchor speed at full throttle (or the preset speed).",
       1500.0, 0.0, 30000.0, 10.0, 0, " ERPM"),
-    F("tractor_freedom", "Tractor Freedom",
+    F("tractor_freedom", "Tractor Free Play",
       "Free play around the anchor, in electrical degrees (the tachometer counts 60 degree steps).",
       120.0, 0.0, 3600.0, 60.0, 0, " deg"),
     F("tractor_stiffness", "Tractor Stiffness (Current)",
-      "Spring Current: current per electrical degree beyond Freedom.", 0.1, 0.0, 10.0, 0.01, 3, " A/deg"),
-    F("tractor_brake", "Tractor Brake (Current)",
+      "Spring Current: current per electrical degree beyond Free Play.", 0.1, 0.0, 10.0, 0.01, 3, " A/deg"),
+    F("tractor_brake", "Tractor Damping (Current)",
       "Spring Current: current against the speed difference to the anchor, per 1000 ERPM.",
       2.0, 0.0, 200.0, 0.1, 2, " A/kERPM"),
     F("tractor_max_current", "Tractor Max Current", "Spring Current: current limit (also capped by the motor limit).",
       20.0, 0.0, 500.0, 1.0, 1, " A"),
-    F("tractor_max_lag", "Tractor Max Lag",
+    F("tractor_max_lag", "Tractor Max Anchor Distance",
       "Largest distance between the wheel and the anchor, in electrical degrees. When the wheel is blocked the "
       "anchor stops moving away beyond it (no huge pull when it frees).", 720.0, 60.0, 36000.0, 60.0, 0, " deg"),
     F("tractor_duty_stiffness", "Tractor Stiffness (Duty)",
-      "Spring Duty: duty per electrical degree beyond Freedom.", 0.0005, 0.0, 0.1, 0.0001, 4, " /deg"),
-    F("tractor_duty_brake", "Tractor Brake (Duty)",
+      "Spring Duty: duty per electrical degree beyond Free Play.", 0.0005, 0.0, 0.1, 0.0001, 4, " /deg"),
+    F("tractor_duty_brake", "Tractor Damping (Duty)",
       "Spring Duty: duty against the speed difference to the anchor, per 1000 ERPM.", 0.02, 0.0, 1.0, 0.001, 3, " /kERPM"),
     F("tractor_max_duty", "Tractor Max Duty", "Spring Duty: duty limit, as a fraction of Maximum Duty Cycle.",
       0.3, 0.02, 1.0, 0.01, 0, " %", True),
@@ -164,12 +162,11 @@ GROUPING = [
         ("ADC", ["::sep::ADC Control Type", "adc_ctrl_type"]),
         ("Duty", ["::sep::Basic Duty Mode", "basic_duty_enable"]),
         ("Forward", ["::sep::Hybrid Current / Duty", "hybrid_enable", "hybrid_duty_limit", "hybrid_band"]),
-        ("Braking / Reverse", ["::sep::Braking / Reverse", "braking_reverse_enable", "stop_erpm", "stop_hyst",
-                               "rev_transition", "::sep::Braking", "braking_mode", "brake_taper_start_erpm",
-                               "brake_taper_min", "::sep::Reverse", "reverse_mode", "::sep::Reverse = Current",
-                               "rev_cur_max", "rev_cur_duty_max", "rev_band", "::sep::Reverse = Duty",
-                               "rev_duty_max", "::sep::Reverse = Smart", "smart_cur_max", "smart_duty_max",
-                               "smart_ramp", "smart_repress"]),
+        ("Braking", ["::sep::Braking / Reverse", "braking_reverse_enable", "stop_erpm", "stop_hyst",
+                     "rev_transition", "::sep::Braking", "braking_mode", "brake_taper_start_erpm",
+                     "brake_taper_min"]),
+        ("Reverse", ["::sep::Reverse", "reverse_mode", "rev_cur_max", "rev_duty_max", "rev_band", "rev_ramp",
+                     "::sep::Re-press to Reverse", "rev_repress", "rev_arm_level", "rev_disarm_time"]),
         ("Tractor", ["::sep::Tractor Mode", "tractor_enable", "tractor_mode", "tractor_speed_mode", "tractor_max_erpm",
                      "tractor_freedom", "tractor_max_lag", "::sep::Spring Current", "tractor_stiffness",
                      "tractor_brake", "tractor_max_current", "::sep::Spring Duty", "tractor_duty_stiffness",

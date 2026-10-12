@@ -45,12 +45,17 @@ static thread_t *m_thread = NULL;
 // Stored request
 static volatile float m_req = 0.0;
 static volatile bool m_req_active = false;
-static volatile bool m_req_new = false;
 
 // Braking / reverse state
 static phase_t m_phase = PH_FWD;
-static float m_smart_cap = 0.0;			// smart reverse duty limit (ramped)
-static bool m_need_neutral = false;		// re-press to reverse
+static float m_rev_level = 0.0;			// reverse current or duty (ramped, magnitude)
+
+// Re-press to reverse state
+static bool m_rev_armed = false;		// reverse armed: the next press reverses
+static bool m_arm_press = false;		// arming press seen, armed when released
+static bool m_press_ok = false;			// present press started from neutral, stopped
+static bool m_was_neutral = true;
+static float m_neutral_time = 0.0;
 static float m_last_out = 0.0;			// last relative current sent (0 after brake or duty)
 static float m_trans_from = 0.0;
 static float m_trans_left = 0.0;
@@ -61,15 +66,15 @@ static float m_tr_anchor = 0.0;			// electrical degrees
 
 static void sanitize(rfp_config *c) {
 	float *f[] = { &c->hybrid_duty_limit, &c->hybrid_band, &c->stop_erpm, &c->stop_hyst, &c->rev_transition,
-			&c->brake_taper_start_erpm, &c->brake_taper_min, &c->rev_cur_max, &c->rev_cur_duty_max, &c->rev_band,
-			&c->rev_duty_max, &c->smart_cur_max, &c->smart_duty_max, &c->smart_ramp, &c->tractor_max_erpm,
+			&c->brake_taper_start_erpm, &c->brake_taper_min, &c->rev_cur_max, &c->rev_band,
+			&c->rev_duty_max, &c->rev_ramp, &c->rev_arm_level, &c->rev_disarm_time, &c->tractor_max_erpm,
 			&c->tractor_freedom, &c->tractor_stiffness, &c->tractor_brake, &c->tractor_max_current,
 			&c->tractor_max_lag, &c->tractor_duty_stiffness, &c->tractor_duty_brake, &c->tractor_max_duty };
 	rfp_config d;
 	rfp_conf_set_defaults(&d);
 	float *fd[] = { &d.hybrid_duty_limit, &d.hybrid_band, &d.stop_erpm, &d.stop_hyst, &d.rev_transition,
-			&d.brake_taper_start_erpm, &d.brake_taper_min, &d.rev_cur_max, &d.rev_cur_duty_max, &d.rev_band,
-			&d.rev_duty_max, &d.smart_cur_max, &d.smart_duty_max, &d.smart_ramp, &d.tractor_max_erpm,
+			&d.brake_taper_start_erpm, &d.brake_taper_min, &d.rev_cur_max, &d.rev_band,
+			&d.rev_duty_max, &d.rev_ramp, &d.rev_arm_level, &d.rev_disarm_time, &d.tractor_max_erpm,
 			&d.tractor_freedom, &d.tractor_stiffness, &d.tractor_brake, &d.tractor_max_current,
 			&d.tractor_max_lag, &d.tractor_duty_stiffness, &d.tractor_duty_brake, &d.tractor_max_duty };
 	for (unsigned i = 0;i < sizeof(f) / sizeof(f[0]);i++) {
@@ -86,12 +91,11 @@ static void sanitize(rfp_config *c) {
 	utils_truncate_number(&c->brake_taper_start_erpm, 0.0, 30000.0);
 	utils_truncate_number(&c->brake_taper_min, 0.0, 1.0);
 	utils_truncate_number(&c->rev_cur_max, 0.0, 1.0);
-	utils_truncate_number(&c->rev_cur_duty_max, 0.02, 1.0);
 	utils_truncate_number(&c->rev_band, 0.02, 0.6);
 	utils_truncate_number(&c->rev_duty_max, 0.02, 1.0);
-	utils_truncate_number(&c->smart_cur_max, 0.0, 1.0);
-	utils_truncate_number(&c->smart_duty_max, 0.02, 1.0);
-	utils_truncate_number(&c->smart_ramp, 0.01, 20.0);
+	utils_truncate_number(&c->rev_ramp, 0.0, 20.0);
+	utils_truncate_number(&c->rev_arm_level, 0.1, 1.0);
+	utils_truncate_number(&c->rev_disarm_time, 0.1, 30.0);
 	utils_truncate_number(&c->tractor_max_erpm, 0.0, 30000.0);
 	utils_truncate_number(&c->tractor_freedom, 0.0, 3600.0);
 	utils_truncate_number(&c->tractor_stiffness, 0.0, 10.0);
@@ -105,10 +109,10 @@ static void sanitize(rfp_config *c) {
 	c->basic_duty_enable = c->basic_duty_enable != 0;
 	c->hybrid_enable = c->hybrid_enable != 0;
 	c->braking_reverse_enable = c->braking_reverse_enable != 0;
-	c->smart_repress = c->smart_repress != 0;
+	c->rev_repress = c->rev_repress != 0;
 	c->tractor_enable = c->tractor_enable != 0;
 	if (c->braking_mode > 1) c->braking_mode = 0;
-	if (c->reverse_mode > 3) c->reverse_mode = 0;
+	if (c->reverse_mode > 2) c->reverse_mode = 0;
 	if (c->tractor_mode > 1) c->tractor_mode = 0;
 	if (c->tractor_speed_mode > 1) c->tractor_speed_mode = 0;
 	if (c->adc_ctrl_type > 1) c->adc_ctrl_type = 0;
@@ -239,16 +243,57 @@ static void set_phase(phase_t ph) {
 	if ((m_phase == PH_BRAKE && ph == PH_REV) || (m_phase == PH_REV && ph == PH_BRAKE)) {
 		m_trans_from = m_last_out;
 		m_trans_left = m_conf.rev_transition;
-		if (ph == PH_REV && m_conf.reverse_mode == 3 && m_conf.smart_repress) {
-			m_need_neutral = true;
-		}
 	} else {
 		m_trans_left = 0.0;
 	}
-	if (ph != PH_REV) {
-		m_smart_cap = 0.0;
+	if (ph == PH_REV) {
+		// Duty: the ramp starts from the present reverse duty (no jerk when already reversing)
+		m_rev_level = m_conf.reverse_mode == 2 ? fmaxf(-mc_interface_get_duty_cycle_now(), 0.0) : 0.0;
 	}
 	m_phase = ph;
+}
+
+// Re-press to reverse: braking never turns into reverse. Stopped, a press of the brake above
+// Reverse Arm Level that starts from neutral arms the reverse once released; the next press
+// reverses. Neutral longer than Reverse Disarm Time, or any throttle, disarms.
+static void repress_update(float v, float rpm, float dt) {
+	const rfp_config *c = &m_conf;
+
+	if (v > -REV_REQ) {
+		// Throttle
+		m_rev_armed = false;
+		m_arm_press = false;
+		m_press_ok = false;
+		m_was_neutral = false;
+		m_neutral_time = 0.0;
+		return;
+	}
+
+	if (v >= REV_REQ) {
+		// Neutral
+		if (m_arm_press) {
+			m_arm_press = false;
+			m_rev_armed = true;
+			m_neutral_time = 0.0;
+		}
+		m_neutral_time += dt;
+		if (m_rev_armed && m_neutral_time > c->rev_disarm_time) {
+			m_rev_armed = false;
+		}
+		m_was_neutral = true;
+		m_press_ok = false;
+		return;
+	}
+
+	// Brake / reverse request. A new press counts for arming only when it starts stopped.
+	if (m_was_neutral) {
+		m_was_neutral = false;
+		m_press_ok = !m_rev_armed && rpm <= c->stop_erpm;
+	}
+	m_neutral_time = 0.0;
+	if (m_press_ok && -v >= c->rev_arm_level) {
+		m_arm_press = true;
+	}
 }
 
 // ---------------------------------------------------------------- tractor
@@ -296,6 +341,16 @@ static void tractor_step(float dt, float req) {
 	}
 }
 
+// Reverse Ramp Time: the reverse level (magnitude) rises from 0 to full in rev_ramp, falls at once
+static float rev_ramp(float goal, float full, float dt) {
+	if (m_conf.rev_ramp <= 0.0 || m_rev_level >= goal) {
+		m_rev_level = goal;
+	} else {
+		m_rev_level = fminf(m_rev_level + full * dt / m_conf.rev_ramp, goal);
+	}
+	return m_rev_level;
+}
+
 // ---------------------------------------------------------------- continuous computation
 void rfp_ext_update(float dt) {
 	const rfp_config *c = &m_conf;
@@ -306,12 +361,6 @@ void rfp_ext_update(float dt) {
 	}
 
 	const float v = m_req;
-	if (m_req_new) {
-		m_req_new = false;
-		if (fabsf(v) < 0.001) {
-			m_need_neutral = false;
-		}
-	}
 
 	if (c->tractor_enable) {
 		tractor_step(dt, v);
@@ -321,6 +370,11 @@ void rfp_ext_update(float dt) {
 
 	const volatile mc_configuration *cfg = mc_interface_get_configuration();
 	const float duty = mc_interface_get_duty_cycle_now();
+	const float rpm = mc_interface_get_rpm();
+
+	if (c->braking_reverse_enable && c->rev_repress) {
+		repress_update(v, rpm, dt);
+	}
 
 	// Forward or neutral request
 	if (v >= REV_REQ) {
@@ -341,7 +395,6 @@ void rfp_ext_update(float dt) {
 	}
 
 	// Braking or reverse, with hysteresis around Stop ERPM
-	const float rpm = mc_interface_get_rpm();
 	if (m_phase == PH_REV) {
 		if (rpm > c->stop_erpm * (1.0 + c->stop_hyst)) {
 			set_phase(PH_BRAKE);
@@ -369,39 +422,28 @@ void rfp_ext_update(float dt) {
 		return;
 	}
 
-	// PH_REV: stopped or reversing
+	// PH_REV: stopped or reversing. Re-press to reverse: no reverse until armed.
+	if (c->rev_repress && c->reverse_mode != 1 && !m_rev_armed) {
+		m_rev_level = 0.0;
+		out_current_rel(blend(0.0, dt), v);
+		return;
+	}
+
 	switch (c->reverse_mode) {
 	case 1: // None
 		out_current_rel(blend(0.0, dt), v);
 		break;
 
-	case 2: // Duty
-		mc_interface_set_duty(v * c->rev_duty_max * cfg->l_max_duty);
+	case 2: { // Duty (falls at once: Basic Duty Mode applies)
+		const float d_max = c->rev_duty_max * cfg->l_max_duty;
+		mc_interface_set_duty(-rev_ramp(-v * d_max, d_max, dt));
 		m_last_out = 0.0;
-		break;
-
-	case 3: { // Smart
-		if (m_need_neutral) {
-			out_current_rel(blend(0.0, dt), v);
-			break;
-		}
-
-		const float cap_max = c->smart_duty_max * cfg->l_max_duty;
-		const float cap_goal = -v * cap_max;
-		if (m_smart_cap < cap_goal) {
-			m_smart_cap = fminf(m_smart_cap + cap_max * dt / c->smart_ramp, cap_goal);
-		} else {
-			m_smart_cap = cap_goal;
-		}
-
-		const float out = v * c->smart_cur_max * taper(m_smart_cap, c->rev_band, -duty);
-		out_current_rel(blend(out, dt), v);
 	} break;
 
 	default: { // Current (official with the default limits)
-		float out = v * c->rev_cur_max;
-		if (c->rev_cur_duty_max < 0.999) {
-			out *= taper(c->rev_cur_duty_max * cfg->l_max_duty, c->rev_band, -duty);
+		float out = -rev_ramp(-v * c->rev_cur_max, c->rev_cur_max, dt);
+		if (c->rev_duty_max < 0.999) {
+			out *= taper(c->rev_duty_max * cfg->l_max_duty, c->rev_band, -duty);
 		}
 		out_current_rel(blend(out, dt), v);
 	} break;
@@ -463,15 +505,18 @@ bool rfp_ext_current_rel(float *val) {
 	if (!m_req_active) {
 		// New sequence: start from a clean state
 		m_phase = PH_FWD;
-		m_smart_cap = 0.0;
+		m_rev_level = 0.0;
 		m_trans_left = 0.0;
-		m_need_neutral = false;
+		m_rev_armed = false;
+		m_arm_press = false;
+		m_press_ok = false;
+		m_was_neutral = true;
+		m_neutral_time = 0.0;
 		m_last_out = 0.0;
 		m_tr_active = false;
 	}
 
 	m_req = *val;
-	m_req_new = true;
 	m_req_active = true;
 	return true;
 }

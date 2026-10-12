@@ -45,19 +45,19 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Forward requests: the duty is limited proportionally to the throttle, so half throttle gives half torque and, without load, about half speed. Duty limit = throttle x Duty Limit at Full Throttle x Maximum Duty Cycle. The current decreases linearly over the Current Taper Band below the limit and is zero at the limit. Applies to relative current requests: ADC and PPM apps, VESC Remote, PAS, CAN. The VESC Tool keyboard (absolute current) is not affected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Forward requests: the duty is limited proportionally to the throttle, so half throttle gives half torque and, without load, about half speed. Duty limit = throttle x Duty Limit at Full Throttle x Maximum Duty Cycle. The current decreases linearly over the Soft Zone Before Duty Limit and is zero at the limit. Applies to relative current requests: ADC and PPM apps, VESC Remote, PAS, CAN. The VESC Tool keyboard (absolute current) is not affected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_HYBRID_ENABLE</cDefine>
             <valInt>0</valInt>
         </hybrid_enable>
         <hybrid_duty_limit>
-            <longName>Duty Limit at Full Throttle</longName>
+            <longName>Max Duty at Full Throttle</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Duty limit at full throttle, as a fraction of Maximum Duty Cycle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Duty limit (about the speed) at full throttle, as a fraction of Maximum Duty Cycle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_HYBRID_DUTY_LIMIT</cDefine>
             <editorDecimalsDouble>0</editorDecimalsDouble>
             <editorScale>100</editorScale>
@@ -72,14 +72,14 @@ p, li { white-space: pre-wrap; }
             <vTx>9</vTx>
         </hybrid_duty_limit>
         <hybrid_band>
-            <longName>Current Taper Band</longName>
+            <longName>Soft Zone Before Duty Limit</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Part of the duty limit over which the current decreases to zero.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Zone below the duty limit, as a part of it, where the current decreases progressively to zero. Wider = softer arrival at the speed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_HYBRID_BAND</cDefine>
             <editorDecimalsDouble>0</editorDecimalsDouble>
             <editorScale>100</editorScale>
@@ -101,40 +101,10 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;On: the Braking and Reverse settings below apply to reverse requests (negative relative current). Off: official behaviour (negative current, then reverse at full current). Applies to relative current requests: ADC and PPM apps, VESC Remote, PAS, CAN. The VESC Tool keyboard (absolute current) is not affected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;On: the Braking and Reverse settings apply to reverse requests (negative relative current). Off: official behaviour (negative current, then reverse at full current). Applies to relative current requests: ADC and PPM apps, VESC Remote, PAS, CAN. The VESC Tool keyboard (absolute current) is not affected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_BRAKING_REVERSE_ENABLE</cDefine>
             <valInt>0</valInt>
         </braking_reverse_enable>
-        <braking_mode>
-            <longName>Braking</longName>
-            <type>4</type>
-            <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse request while rolling forward faster than Stop ERPM. Active: negative current as in the official firmware: torque against the motion, current injected from the battery when regeneration is not enough, down to Stop ERPM. Regen Only: brake current (as the No Reverse control types): regeneration only, phases shorted when the current cannot be held. Applies to relative current requests: ADC and PPM apps, VESC Remote, PAS, CAN. The VESC Tool keyboard (absolute current) is not affected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>RFP_BRAKING_MODE</cDefine>
-            <valInt>0</valInt>
-            <enumNames>Active (negative current)</enumNames>
-            <enumNames>Regen Only (brake)</enumNames>
-        </braking_mode>
-        <reverse_mode>
-            <longName>Reverse</longName>
-            <type>4</type>
-            <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse request below Stop ERPM (stopped or already reversing). Current: reverse in current, limited by the Reverse Current settings (100 % = official firmware). None: never reverse, zero current. Duty: reverse in duty proportional to the request, up to Reverse Duty Max. Smart: reverse in current with a duty limit proportional to the request, raised with a ramp. Applies to relative current requests: ADC and PPM apps, VESC Remote, PAS, CAN. The VESC Tool keyboard (absolute current) is not affected.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>RFP_REVERSE_MODE</cDefine>
-            <valInt>0</valInt>
-            <enumNames>Current</enumNames>
-            <enumNames>None</enumNames>
-            <enumNames>Duty</enumNames>
-            <enumNames>Smart</enumNames>
-        </reverse_mode>
         <stop_erpm>
             <longName>Stop ERPM</longName>
             <type>1</type>
@@ -158,14 +128,14 @@ p, li { white-space: pre-wrap; }
             <vTx>9</vTx>
         </stop_erpm>
         <stop_hyst>
-            <longName>Stop ERPM Hysteresis</longName>
+            <longName>Re-brake Margin</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Once reversing (below Stop ERPM), braking resumes only above Stop ERPM x (1 + this value). Avoids switching back and forth around Stop ERPM.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Once reversing (below Stop ERPM), braking resumes only above Stop ERPM + this margin (in % of Stop ERPM). Avoids switching back and forth around Stop ERPM.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_STOP_HYST</cDefine>
             <editorDecimalsDouble>0</editorDecimalsDouble>
             <editorScale>100</editorScale>
@@ -180,14 +150,14 @@ p, li { white-space: pre-wrap; }
             <vTx>9</vTx>
         </stop_hyst>
         <rev_transition>
-            <longName>Brake / Reverse Transition Time</longName>
+            <longName>Brake / Reverse Fade Time</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Time over which the current moves from the braking value to the reverse value (and back), instead of a sudden change of sign. 0 = immediate.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Time over which the current fades from the braking value to the reverse value (and back), instead of a sudden change. 0 = immediate.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_REV_TRANSITION</cDefine>
             <editorDecimalsDouble>2</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -201,15 +171,29 @@ p, li { white-space: pre-wrap; }
             <suffix> s</suffix>
             <vTx>9</vTx>
         </rev_transition>
+        <braking_mode>
+            <longName>Braking Mode</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse request while rolling forward faster than Stop ERPM. Active: negative current as in the official firmware: torque against the motion, current injected from the battery when regeneration is not enough, down to Stop ERPM. Regen Only: brake current (as the No Reverse control types): regeneration only, phases shorted when the current cannot be held.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>RFP_BRAKING_MODE</cDefine>
+            <valInt>0</valInt>
+            <enumNames>Active (negative current)</enumNames>
+            <enumNames>Regen Only (brake)</enumNames>
+        </braking_mode>
         <brake_taper_start_erpm>
-            <longName>Braking Taper Start ERPM</longName>
+            <longName>Soft Stop Start ERPM</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Active braking: below this speed the braking current decreases, down to Braking Taper Min at Stop ERPM. Limits the overshoot into reverse.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Active braking: below this speed the braking becomes softer, down to Braking Force at Stop at Stop ERPM. Limits the overshoot into reverse.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_BRAKE_TAPER_START_ERPM</cDefine>
             <editorDecimalsDouble>0</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -224,14 +208,14 @@ p, li { white-space: pre-wrap; }
             <vTx>9</vTx>
         </brake_taper_start_erpm>
         <brake_taper_min>
-            <longName>Braking Taper Min</longName>
+            <longName>Braking Force at Stop</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Active braking: fraction of the braking current kept at Stop ERPM. 100 % = no reduction (official).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Active braking: braking force left at Stop ERPM, as a part of the request. 100 % = no softening (official).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_BRAKE_TAPER_MIN</cDefine>
             <editorDecimalsDouble>0</editorDecimalsDouble>
             <editorScale>100</editorScale>
@@ -245,6 +229,21 @@ p, li { white-space: pre-wrap; }
             <suffix> %</suffix>
             <vTx>9</vTx>
         </brake_taper_min>
+        <reverse_mode>
+            <longName>Reverse Mode</longName>
+            <type>4</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse request below Stop ERPM (stopped or already reversing). Current: reverse in current up to Reverse Current Max, top reverse speed limited by Reverse Max Duty (100 % = official firmware). None: never reverse, zero current. Duty: reverse duty = request x Reverse Max Duty; Basic Duty Mode applies when the request is released. Both rise with Reverse Ramp Time.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>RFP_REVERSE_MODE</cDefine>
+            <valInt>0</valInt>
+            <enumNames>Current</enumNames>
+            <enumNames>None</enumNames>
+            <enumNames>Duty</enumNames>
+        </reverse_mode>
         <rev_cur_max>
             <longName>Reverse Current Max</longName>
             <type>1</type>
@@ -253,7 +252,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse = Current: reverse current at full request, as a fraction of the motor current limit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Current: reverse current at full request, as a fraction of the motor current limit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_REV_CUR_MAX</cDefine>
             <editorDecimalsDouble>0</editorDecimalsDouble>
             <editorScale>100</editorScale>
@@ -267,59 +266,15 @@ p, li { white-space: pre-wrap; }
             <suffix> %</suffix>
             <vTx>9</vTx>
         </rev_cur_max>
-        <rev_cur_duty_max>
-            <longName>Reverse Current Duty Max</longName>
-            <type>1</type>
-            <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse = Current: duty limit in reverse (top reverse speed), as a fraction of Maximum Duty Cycle. The current decreases over the Reverse Taper Band below it. 100 % = no limit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>RFP_REV_CUR_DUTY_MAX</cDefine>
-            <editorDecimalsDouble>0</editorDecimalsDouble>
-            <editorScale>100</editorScale>
-            <editAsPercentage>0</editAsPercentage>
-            <maxDouble>1</maxDouble>
-            <minDouble>0.02</minDouble>
-            <showDisplay>0</showDisplay>
-            <stepDouble>1</stepDouble>
-            <valDouble>1</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
-            <suffix> %</suffix>
-            <vTx>9</vTx>
-        </rev_cur_duty_max>
-        <rev_band>
-            <longName>Reverse Taper Band</longName>
-            <type>1</type>
-            <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse = Current or Smart: part of the reverse duty limit over which the current decreases to zero.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>RFP_REV_BAND</cDefine>
-            <editorDecimalsDouble>0</editorDecimalsDouble>
-            <editorScale>100</editorScale>
-            <editAsPercentage>0</editAsPercentage>
-            <maxDouble>0.6</maxDouble>
-            <minDouble>0.02</minDouble>
-            <showDisplay>0</showDisplay>
-            <stepDouble>1</stepDouble>
-            <valDouble>0.15</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
-            <suffix> %</suffix>
-            <vTx>9</vTx>
-        </rev_band>
         <rev_duty_max>
-            <longName>Reverse Duty Max</longName>
+            <longName>Reverse Max Duty</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse = Duty: duty at full reverse request, as a fraction of Maximum Duty Cycle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Fraction of Maximum Duty Cycle. Current: top reverse speed (100 % = no limit). Duty: duty at full reverse request.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_REV_DUTY_MAX</cDefine>
             <editorDecimalsDouble>0</editorDecimalsDouble>
             <editorScale>100</editorScale>
@@ -333,84 +288,106 @@ p, li { white-space: pre-wrap; }
             <suffix> %</suffix>
             <vTx>9</vTx>
         </rev_duty_max>
-        <smart_cur_max>
-            <longName>Smart Reverse Current Max</longName>
+        <rev_band>
+            <longName>Soft Zone Before Reverse Limit</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse = Smart: reverse current at full request, as a fraction of the motor current limit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>RFP_SMART_CUR_MAX</cDefine>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Current: zone below the top reverse speed (Reverse Max Duty), as a part of it, where the current decreases progressively to zero.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>RFP_REV_BAND</cDefine>
             <editorDecimalsDouble>0</editorDecimalsDouble>
             <editorScale>100</editorScale>
             <editAsPercentage>0</editAsPercentage>
-            <maxDouble>1</maxDouble>
-            <minDouble>0</minDouble>
-            <showDisplay>0</showDisplay>
-            <stepDouble>1</stepDouble>
-            <valDouble>1</valDouble>
-            <vTxDoubleScale>1000</vTxDoubleScale>
-            <suffix> %</suffix>
-            <vTx>9</vTx>
-        </smart_cur_max>
-        <smart_duty_max>
-            <longName>Smart Reverse Duty Max</longName>
-            <type>1</type>
-            <transmittable>1</transmittable>
-            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse = Smart: duty limit at full reverse request, as a fraction of Maximum Duty Cycle.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>RFP_SMART_DUTY_MAX</cDefine>
-            <editorDecimalsDouble>0</editorDecimalsDouble>
-            <editorScale>100</editorScale>
-            <editAsPercentage>0</editAsPercentage>
-            <maxDouble>1</maxDouble>
+            <maxDouble>0.6</maxDouble>
             <minDouble>0.02</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>1</stepDouble>
-            <valDouble>0.08</valDouble>
+            <valDouble>0.15</valDouble>
             <vTxDoubleScale>1000</vTxDoubleScale>
             <suffix> %</suffix>
             <vTx>9</vTx>
-        </smart_duty_max>
-        <smart_ramp>
-            <longName>Smart Reverse Ramp Time</longName>
+        </rev_band>
+        <rev_ramp>
+            <longName>Reverse Ramp Time</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse = Smart: time to raise the duty limit from 0 to Smart Reverse Duty Max.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>RFP_SMART_RAMP</cDefine>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Time for the reverse current (Current) or duty (Duty) to rise from 0 to its full value. It falls at once when the request is reduced. 0 = no ramp (official).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>RFP_REV_RAMP</cDefine>
             <editorDecimalsDouble>2</editorDecimalsDouble>
             <editorScale>1</editorScale>
             <editAsPercentage>0</editAsPercentage>
             <maxDouble>20</maxDouble>
-            <minDouble>0.01</minDouble>
+            <minDouble>0</minDouble>
             <showDisplay>0</showDisplay>
             <stepDouble>0.1</stepDouble>
-            <valDouble>3</valDouble>
+            <valDouble>0</valDouble>
             <vTxDoubleScale>1000</vTxDoubleScale>
             <suffix> s</suffix>
             <vTx>9</vTx>
-        </smart_ramp>
-        <smart_repress>
-            <longName>Smart Reverse: Re-press to Reverse</longName>
+        </rev_ramp>
+        <rev_repress>
+            <longName>Re-press to Reverse</longName>
             <type>5</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse = Smart: after braking to a stop, return to neutral and request reverse again to start reversing.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
-            <cDefine>RFP_SMART_REPRESS</cDefine>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Current, Duty: braking never turns into reverse. To reverse: stopped, release to neutral, press the brake once (above Reverse Arm Level) and release: reverse is armed, the next press reverses. Neutral longer than Reverse Disarm Time, or any throttle, disarms.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>RFP_REV_REPRESS</cDefine>
             <valInt>0</valInt>
-        </smart_repress>
+        </rev_repress>
+        <rev_arm_level>
+            <longName>Reverse Arm Level</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Re-press to Reverse: brake level of the press that arms the reverse.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>RFP_REV_ARM_LEVEL</cDefine>
+            <editorDecimalsDouble>0</editorDecimalsDouble>
+            <editorScale>100</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>1</maxDouble>
+            <minDouble>0.1</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>1</stepDouble>
+            <valDouble>0.95</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> %</suffix>
+            <vTx>9</vTx>
+        </rev_arm_level>
+        <rev_disarm_time>
+            <longName>Reverse Disarm Time</longName>
+            <type>1</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Re-press to Reverse: time in neutral after which the armed reverse is disarmed.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>RFP_REV_DISARM_TIME</cDefine>
+            <editorDecimalsDouble>1</editorDecimalsDouble>
+            <editorScale>1</editorScale>
+            <editAsPercentage>0</editAsPercentage>
+            <maxDouble>30</maxDouble>
+            <minDouble>0.1</minDouble>
+            <showDisplay>0</showDisplay>
+            <stepDouble>0.1</stepDouble>
+            <valDouble>2</valDouble>
+            <vTxDoubleScale>1000</vTxDoubleScale>
+            <suffix> s</suffix>
+            <vTx>9</vTx>
+        </rev_disarm_time>
         <tractor_enable>
             <longName>Tractor Mode</longName>
             <type>5</type>
@@ -431,7 +408,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Virtual spring on the wheel position (tachometer). An anchor position is held with zero throttle and moves with the throttle. Within Freedom of the anchor the motor is free; beyond, a force proportional to the distance pulls the wheel back (Stiffness). Brake opposes the free motion. For stairs, mud... Spring Current: output in current. Spring Duty: output in duty (to try). Any other command (brake, duty, keyboard, timeout) stops the tractor at once.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Virtual spring on the wheel position (tachometer). An anchor position is held with zero throttle and moves with the throttle. Within Free Play of the anchor the motor is free; beyond, a force proportional to the distance pulls the wheel back (Stiffness). Damping opposes the free motion. For stairs, mud... Spring Current: output in current. Spring Duty: output in duty (to try). Any other command (brake, duty, keyboard, timeout) stops the tractor at once.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_TRACTOR_MODE</cDefine>
             <valInt>0</valInt>
             <enumNames>Spring Current</enumNames>
@@ -474,7 +451,7 @@ p, li { white-space: pre-wrap; }
             <vTx>9</vTx>
         </tractor_max_erpm>
         <tractor_freedom>
-            <longName>Tractor Freedom</longName>
+            <longName>Tractor Free Play</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
@@ -503,7 +480,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Spring Current: current per electrical degree beyond Freedom.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Spring Current: current per electrical degree beyond Free Play.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_TRACTOR_STIFFNESS</cDefine>
             <editorDecimalsDouble>3</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -518,7 +495,7 @@ p, li { white-space: pre-wrap; }
             <vTx>9</vTx>
         </tractor_stiffness>
         <tractor_brake>
-            <longName>Tractor Brake (Current)</longName>
+            <longName>Tractor Damping (Current)</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
@@ -562,7 +539,7 @@ p, li { white-space: pre-wrap; }
             <vTx>9</vTx>
         </tractor_max_current>
         <tractor_max_lag>
-            <longName>Tractor Max Lag</longName>
+            <longName>Tractor Max Anchor Distance</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
@@ -591,7 +568,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Spring Duty: duty per electrical degree beyond Freedom.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Spring Duty: duty per electrical degree beyond Free Play.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_TRACTOR_DUTY_STIFFNESS</cDefine>
             <editorDecimalsDouble>4</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -606,7 +583,7 @@ p, li { white-space: pre-wrap; }
             <vTx>9</vTx>
         </tractor_duty_stiffness>
         <tractor_duty_brake>
-            <longName>Tractor Brake (Duty)</longName>
+            <longName>Tractor Damping (Duty)</longName>
             <type>1</type>
             <transmittable>1</transmittable>
             <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
@@ -670,21 +647,20 @@ p, li { white-space: pre-wrap; }
         <ser>hybrid_duty_limit</ser>
         <ser>hybrid_band</ser>
         <ser>braking_reverse_enable</ser>
-        <ser>braking_mode</ser>
-        <ser>reverse_mode</ser>
         <ser>stop_erpm</ser>
         <ser>stop_hyst</ser>
         <ser>rev_transition</ser>
+        <ser>braking_mode</ser>
         <ser>brake_taper_start_erpm</ser>
         <ser>brake_taper_min</ser>
+        <ser>reverse_mode</ser>
         <ser>rev_cur_max</ser>
-        <ser>rev_cur_duty_max</ser>
-        <ser>rev_band</ser>
         <ser>rev_duty_max</ser>
-        <ser>smart_cur_max</ser>
-        <ser>smart_duty_max</ser>
-        <ser>smart_ramp</ser>
-        <ser>smart_repress</ser>
+        <ser>rev_band</ser>
+        <ser>rev_ramp</ser>
+        <ser>rev_repress</ser>
+        <ser>rev_arm_level</ser>
+        <ser>rev_disarm_time</ser>
         <ser>tractor_enable</ser>
         <ser>tractor_mode</ser>
         <ser>tractor_speed_mode</ser>
@@ -726,7 +702,7 @@ p, li { white-space: pre-wrap; }
                 </subgroupParams>
             </subgroup>
             <subgroup>
-                <subgroupName>Braking / Reverse</subgroupName>
+                <subgroupName>Braking</subgroupName>
                 <subgroupParams>
                     <param>::sep::Braking / Reverse</param>
                     <param>braking_reverse_enable</param>
@@ -737,19 +713,21 @@ p, li { white-space: pre-wrap; }
                     <param>braking_mode</param>
                     <param>brake_taper_start_erpm</param>
                     <param>brake_taper_min</param>
+                </subgroupParams>
+            </subgroup>
+            <subgroup>
+                <subgroupName>Reverse</subgroupName>
+                <subgroupParams>
                     <param>::sep::Reverse</param>
                     <param>reverse_mode</param>
-                    <param>::sep::Reverse = Current</param>
                     <param>rev_cur_max</param>
-                    <param>rev_cur_duty_max</param>
-                    <param>rev_band</param>
-                    <param>::sep::Reverse = Duty</param>
                     <param>rev_duty_max</param>
-                    <param>::sep::Reverse = Smart</param>
-                    <param>smart_cur_max</param>
-                    <param>smart_duty_max</param>
-                    <param>smart_ramp</param>
-                    <param>smart_repress</param>
+                    <param>rev_band</param>
+                    <param>rev_ramp</param>
+                    <param>::sep::Re-press to Reverse</param>
+                    <param>rev_repress</param>
+                    <param>rev_arm_level</param>
+                    <param>rev_disarm_time</param>
                 </subgroupParams>
             </subgroup>
             <subgroup>

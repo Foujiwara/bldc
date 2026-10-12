@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 // braking_mode : 0 = Active (negative current), 1 = Regen Only (brake)
-// reverse_mode : 0 = Current, 1 = None, 2 = Duty, 3 = Smart
+// reverse_mode : 0 = Current, 1 = None, 2 = Duty
 // tractor_mode : 0 = Spring Current, 1 = Spring Duty
 // tractor_speed_mode : 0 = Throttle, 1 = Preset
 // adc_ctrl_type : 0 = App ADC Setting, 1 = Current Signed, Brake Priority
@@ -17,21 +17,20 @@ typedef struct {
 	float hybrid_duty_limit;
 	float hybrid_band;
 	bool braking_reverse_enable;
-	uint8_t braking_mode;
-	uint8_t reverse_mode;
 	float stop_erpm;
 	float stop_hyst;
 	float rev_transition;
+	uint8_t braking_mode;
 	float brake_taper_start_erpm;
 	float brake_taper_min;
+	uint8_t reverse_mode;
 	float rev_cur_max;
-	float rev_cur_duty_max;
-	float rev_band;
 	float rev_duty_max;
-	float smart_cur_max;
-	float smart_duty_max;
-	float smart_ramp;
-	bool smart_repress;
+	float rev_band;
+	float rev_ramp;
+	bool rev_repress;
+	float rev_arm_level;
+	float rev_disarm_time;
 	bool tractor_enable;
 	uint8_t tractor_mode;
 	uint8_t tractor_speed_mode;
@@ -47,9 +46,9 @@ typedef struct {
 	uint8_t adc_ctrl_type;
 } rfp_config;
 
-#define RFP_CONFIG_SIGNATURE	1245399714u
-#define RFP_CONF_SER_SIZE	106
-#define RFP_CONF_XML_SIZE	4762
+#define RFP_CONFIG_SIGNATURE	1888635117u
+#define RFP_CONF_SER_SIZE	102
+#define RFP_CONF_XML_SIZE	4965
 
 int32_t rfp_conf_serialize(uint8_t *buffer, const rfp_config *conf);
 bool rfp_conf_deserialize(const uint8_t *buffer, rfp_config *conf);

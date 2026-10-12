@@ -8,8 +8,8 @@
 	    when the requested duty drops below the present duty.
 	  - Hybrid current / duty (forward): the duty is limited proportionally to the request
 	    and the current tapers off near the limit.
-	  - Braking (Active / Regen Only) and Reverse (Current / None / Duty / Smart) handling of
-	    reverse requests, with their limits.
+	  - Braking (Active / Regen Only) and Reverse (Current / None / Duty) handling of
+	    reverse requests, with their limits, ramp and the re-press to reverse sequence.
 	  - Tractor mode: virtual spring on the wheel position around an anchor that moves with
 	    the throttle (current or duty output).
 	  - ADC control type: replaces the Control Type of the ADC app (signed current from ADC1

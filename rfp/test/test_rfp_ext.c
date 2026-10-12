@@ -171,7 +171,7 @@ int main(void) {
 	check("None: zero current at stop", near(m_set_current, 0.0f, 1e-6));
 
 	rfp_conf_set_defaults(&c);
-	c.braking_reverse_enable = 1; c.reverse_mode = 0; c.rev_cur_max = 0.4f; c.rev_cur_duty_max = 0.2f;
+	c.braking_reverse_enable = 1; c.reverse_mode = 0; c.rev_cur_max = 0.4f; c.rev_duty_max = 0.2f;
 	c.rev_band = 0.2f; c.rev_transition = 0.0f;
 	configure(&c);
 	m_rpm = -2000; m_duty = -0.2f * 0.95f; req(-1.0f); run(1);
@@ -185,22 +185,51 @@ int main(void) {
 	check("Duty: reverse duty = request x Reverse Duty Max, every ms", m_duty_calls == 3 && near(m_set_duty, -0.5f * 0.3f * 0.95f, 1e-5));
 
 	rfp_conf_set_defaults(&c);
-	c.braking_reverse_enable = 1; c.reverse_mode = 3; c.smart_cur_max = 0.5f; c.smart_duty_max = 0.1f;
-	c.smart_ramp = 2.0f; c.rev_band = 0.2f; c.rev_transition = 0.0f;
+	c.braking_reverse_enable = 1; c.reverse_mode = 2; c.rev_duty_max = 0.2f; c.rev_ramp = 2.0f;
+	c.rev_transition = 0.0f;
 	configure(&c);
-	m_rpm = 0; m_duty = 0.0f;
-	req(-1.0f); run(1000);                       // 1 s, no new request: cap = half of 0.095
-	check("Smart: current capped (50 %) far from the duty limit", near(rel_out(), -0.5f, 1e-4));
-	m_duty = -0.0475f; run(1);
-	check("Smart: zero current at the ramped duty limit (1 s of a 2 s ramp)", near(rel_out(), 0.0f, 0.03));
+	m_rpm = 0; m_duty = 0.0f; req(0.0f); run(1);
+	req(-1.0f); run(1000);                       // 1 s of a 2 s ramp
+	check("Ramp, Duty: half of the reverse duty after half the ramp", near(m_set_duty, -0.5f * 0.2f * 0.95f, 1e-3));
+	req(-0.25f); run(1);
+	check("Ramp, Duty: falls at once when the request is reduced", near(m_set_duty, -0.25f * 0.2f * 0.95f, 1e-5));
 
-	c.smart_repress = 1;
+	rfp_conf_set_defaults(&c);
+	c.braking_reverse_enable = 1; c.reverse_mode = 0; c.rev_cur_max = 0.5f; c.rev_ramp = 1.0f;
+	c.rev_transition = 0.0f;
 	configure(&c);
-	m_rpm = 3000; m_duty = 0.3f; req(-1.0f); run(5);     // braking
-	m_rpm = 0; m_duty = 0.0f; run(5);
-	check("Re-press: after braking to a stop, no reverse", near(m_set_current, 0.0f, 1e-6));
-	req(0.0f); run(1); req(-1.0f); run(5);
-	check("Re-press: after neutral, reverse allowed", rel_out() < -0.01f);
+	m_rpm = 0; m_duty = 0.0f; req(0.0f); run(1);
+	req(-1.0f); run(500);
+	check("Ramp, Current: half of Reverse Current Max after half the ramp", near(rel_out(), -0.25f, 1e-3));
+
+	printf("== Re-press to Reverse (arm level 95 %%, disarm 2 s)\n");
+	rfp_conf_set_defaults(&c);
+	c.braking_reverse_enable = 1; c.reverse_mode = 2; c.rev_duty_max = 0.5f; c.rev_repress = 1;
+	c.rev_transition = 0.0f;
+	configure(&c);
+	m_rpm = 0; m_duty = 0.0f; req(0.0f); run(1);
+	m_rpm = 3000; m_duty = 0.3f; req(0.5f); run(5);     // rolling forward
+	req(-1.0f); run(5);                                  // full brake
+	check("braking while rolling", rel_out() < -0.9f);
+	m_rpm = 0; m_duty = 0.0f; m_duty_calls = 0; run(200);
+	check("stopped, brake still held: no reverse", m_duty_calls == 0 && near(m_set_current, 0.0f, 1e-6));
+	req(0.0f); run(100); m_duty_calls = 0;
+	req(-0.5f); run(100);
+	check("press below Arm Level: no reverse", m_duty_calls == 0);
+	req(0.0f); run(100); req(-0.5f); run(100);
+	check("... and does not arm", m_duty_calls == 0);
+	req(0.0f); run(100); req(-1.0f); run(50);
+	check("arming press: no reverse during the press", m_duty_calls == 0);
+	req(0.0f); run(500); req(-0.6f); run(5);
+	check("armed: next press reverses (duty)", m_duty_calls == 5 && near(m_set_duty, -0.6f * 0.5f * 0.95f, 1e-5));
+	req(0.0f); run(1000); m_duty_calls = 0; req(-0.6f); run(5);
+	check("neutral 1 s (< 2 s): still armed", m_duty_calls == 5);
+	req(0.0f); run(2100); m_duty_calls = 0; req(-0.6f); run(5);
+	check("neutral 2.1 s: disarmed", m_duty_calls == 0);
+	req(0.0f); run(10); req(-1.0f); run(10); req(0.0f); run(10);   // arm again
+	req(0.3f); run(10); req(0.0f); run(10);                        // throttle
+	m_duty_calls = 0; req(-0.6f); run(5);
+	check("throttle disarms", m_duty_calls == 0);
 
 	printf("== Tractor (spring on the tachometer, 60 deg per step)\n");
 	rfp_conf_set_defaults(&c);
@@ -254,25 +283,25 @@ int main(void) {
 
 	printf("== Configuration page and storage\n");
 	rfp_conf_set_defaults(&c);
-	c.basic_duty_enable = 1; c.braking_reverse_enable = 1; c.reverse_mode = 3; c.braking_mode = 1;
-	c.tractor_enable = 1; c.tractor_mode = 1; c.smart_ramp = 5.0f; c.tractor_freedom = 240;
+	c.basic_duty_enable = 1; c.braking_reverse_enable = 1; c.reverse_mode = 2; c.braking_mode = 1;
+	c.tractor_enable = 1; c.tractor_mode = 1; c.rev_ramp = 5.0f; c.tractor_freedom = 240;
 	configure(&c);
 	check("Basic Duty Mode now on", rfp_ext_basic_duty());
 	uint8_t b[160];
 	rfp_config d;
 	int n = g_get(b, false);
-	check("page reads back what was written", n == RFP_CONF_SER_SIZE && rfp_conf_deserialize(b, &d) && d.reverse_mode == 3 && near(d.smart_ramp, 5.0f, 1e-6));
+	check("page reads back what was written", n == RFP_CONF_SER_SIZE && rfp_conf_deserialize(b, &d) && d.reverse_mode == 2 && near(d.rev_ramp, 5.0f, 1e-6));
 	rfp_ext_init();                                // "reboot": reload from the emulated EEPROM
 	g_get(b, false);
 	check("settings survive a restart", rfp_conf_deserialize(b, &d) && d.basic_duty_enable && d.braking_reverse_enable && d.tractor_enable && d.tractor_mode == 1 && near(d.tractor_freedom, 240, 1e-3));
 	g_get(b, true);
 	check("'default' button gives the defaults", rfp_conf_deserialize(b, &d) && !d.basic_duty_enable && !d.braking_reverse_enable && !d.tractor_enable);
 	rfp_conf_set_defaults(&c);
-	c.hybrid_band = NAN; c.smart_ramp = -3.0f; c.reverse_mode = 9;
+	c.hybrid_band = NAN; c.rev_ramp = -3.0f; c.reverse_mode = 9;
 	configure(&c);
 	g_get(b, false);
 	rfp_conf_deserialize(b, &d);
-	check("invalid values are sanitized", d.hybrid_band >= 0.02f && d.hybrid_band <= 0.6f && near(d.smart_ramp, 0.01f, 1e-6) && d.reverse_mode == 0);
+	check("invalid values are sanitized", d.hybrid_band >= 0.02f && d.hybrid_band <= 0.6f && near(d.rev_ramp, 0.0f, 1e-6) && d.reverse_mode == 0);
 	uint8_t bad[160];
 	rfp_conf_serialize(bad, &c);
 	bad[0] ^= 0xFF;
