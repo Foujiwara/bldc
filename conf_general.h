@@ -86,6 +86,13 @@
 //#include "finn/app_finn_az_conf.h"
 
 #include "hw.h"
+
+// RFP: "RFP Test" page in VESC Tool (throttle slider), for boards without their own HW page.
+// Define RFP_NO_QML to remove it.
+#if !defined(QMLUI_SOURCE_HW) && !defined(RFP_NO_QML)
+#define QMLUI_SOURCE_HW		"rfp_qml_hw.c"
+#define QMLUI_HEADER_HW		"rfp_qml_hw.h"
+#endif
 #include "mcconf_default.h"
 #include "appconf_default.h"
 
