@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-#define DATA_QML_HW_SIZE		1129
+#define DATA_QML_HW_SIZE		1547
 
 extern uint8_t data_qml_hw[];
 

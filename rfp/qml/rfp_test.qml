@@ -1,14 +1,17 @@
 /*
-    RFP Test page (VESC Tool): a slider that sends a relative current request
-    (SET_CURRENT_REL), like a throttle: positive, neutral, negative. It goes through the
-    same path as the apps (ADC, PPM...), so the RFP Extras functions (hybrid, braking,
-    reverse, tractor) apply.
+    RFP Test page (VESC Tool): sliders that send commands like a throttle, 50 times per second:
+      - Current Rel: relative current request (SET_CURRENT_REL), the path of the ADC / PPM
+        current control types. The RFP Extras functions (hybrid, braking / reverse, tractor) apply.
+      - Duty: duty cycle request (SET_DUTY), the path of the duty control types. Basic Duty Mode
+        applies.
+      - ERPM: speed request (SET_RPM), the path of the PID speed control types.
+    Only one command type is active at a time.
 
     This file is part of the VESC firmware (GPLv3).
 */
 
 import QtQuick 2.7
-import QtQuick.Controls 2.0
+import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.3
 
 import Vedder.vesc.commands 1.0
@@ -18,105 +21,149 @@ Item {
     anchors.fill: parent
 
     property Commands mCommands: VescIf.commands()
+    // active command: 0 none, 1 current rel, 2 duty, 3 erpm
+    property int mode: 0
 
-    function neutral() {
-        throttle.value = 0.0
-        mCommands.setCurrentRel(0.0)
+    function setMode(m) {
+        if (mode === m) {
+            m = 0
+        }
+        mode = m
+        currentSlider.value = 0.0
+        dutySlider.value = 0.0
+        rpmSlider.value = 0.0
+        if (m === 0) {
+            mCommands.setCurrentRel(0.0)
+        }
     }
 
-    ColumnLayout {
+    function sendNow() {
+        if (mode === 1) {
+            mCommands.setCurrentRel(currentSlider.value)
+        } else if (mode === 2) {
+            mCommands.setDutyCycle(dutySlider.value * maxDuty.value / 100.0)
+        } else if (mode === 3) {
+            mCommands.setRpm(Math.round(rpmSlider.value * maxErpm.value))
+        }
+    }
+
+    ScrollView {
         anchors.fill: parent
-        anchors.margins: 10
-        spacing: 8
+        clip: true
 
-        Label {
-            text: "RFP Test Throttle"
-            font.bold: true
-            font.pointSize: 14
-        }
+        ColumnLayout {
+            width: mainItem.width - 20
+            x: 10
+            spacing: 6
 
-        Label {
-            Layout.fillWidth: true
-            wrapMode: Text.WordWrap
-            text: "Sends a relative current request (as an ADC or PPM throttle) 50 times per second " +
-                  "while enabled. The RFP Extras settings apply. Keep the wheel free for the first tries."
-        }
-
-        Switch {
-            id: enable
-            text: "Enable"
-            checked: false
-            onCheckedChanged: {
-                if (!checked) {
-                    neutral()
-                }
+            Label {
+                text: "RFP Test"
+                font.bold: true
+                font.pointSize: 14
             }
-        }
 
-        Label {
-            text: "Request: " + Math.round(throttle.value * 100) + " %"
-            font.pointSize: 13
-        }
-
-        Slider {
-            id: throttle
-            Layout.fillWidth: true
-            from: -1.0
-            to: 1.0
-            value: 0.0
-            stepSize: 0.01
-            enabled: enable.checked
-            onPressedChanged: {
-                if (!pressed && springBack.checked) {
-                    value = 0.0
-                }
+            Label {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                text: "Each slider sends its command 50 times per second while enabled, like a throttle. " +
+                      "Only one command type at a time. Keep the wheel free for the first tries."
             }
-        }
 
-        RowLayout {
-            Layout.fillWidth: true
+            CheckBox {
+                id: springBack
+                text: "Sliders back to neutral when released"
+                checked: true
+            }
+
             Button {
                 Layout.fillWidth: true
-                text: "-100 %"
-                enabled: enable.checked
-                onClicked: throttle.value = -1.0
+                text: "STOP (release)"
+                onClicked: setMode(0)
             }
-            Button {
+
+            // ------------------------------------------------ current rel
+            Label {
+                text: "Current Rel (ADC / PPM current types, RFP Extras apply)"
+                font.bold: true
+            }
+            Switch {
+                text: "Enable Current Rel"
+                checked: mode === 1
+                onClicked: setMode(1)
+            }
+            Label { text: "Request: " + Math.round(currentSlider.value * 100) + " %" }
+            Slider {
+                id: currentSlider
                 Layout.fillWidth: true
-                text: "Neutral"
-                onClicked: neutral()
+                from: -1.0; to: 1.0; value: 0.0; stepSize: 0.01
+                enabled: mode === 1
+                onPressedChanged: if (!pressed && springBack.checked) value = 0.0
             }
-            Button {
+
+            // ------------------------------------------------ duty
+            Label {
+                text: "Duty (ADC / PPM duty types, Basic Duty Mode applies)"
+                font.bold: true
+            }
+            Switch {
+                text: "Enable Duty"
+                checked: mode === 2
+                onClicked: setMode(2)
+            }
+            RowLayout {
                 Layout.fillWidth: true
-                text: "+100 %"
-                enabled: enable.checked
-                onClicked: throttle.value = 1.0
+                Label { text: "Duty at full slider (%)" }
+                SpinBox { id: maxDuty; from: 1; to: 95; value: 50; editable: true }
             }
-        }
+            Label { text: "Duty: " + (dutySlider.value * maxDuty.value).toFixed(1) + " %" }
+            Slider {
+                id: dutySlider
+                Layout.fillWidth: true
+                from: -1.0; to: 1.0; value: 0.0; stepSize: 0.01
+                enabled: mode === 2
+                onPressedChanged: if (!pressed && springBack.checked) value = 0.0
+            }
 
-        CheckBox {
-            id: springBack
-            text: "Back to neutral when released"
-            checked: true
-        }
+            // ------------------------------------------------ erpm
+            Label {
+                text: "ERPM (ADC / PPM PID speed types)"
+                font.bold: true
+            }
+            Switch {
+                text: "Enable ERPM"
+                checked: mode === 3
+                onClicked: setMode(3)
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Label { text: "ERPM at full slider" }
+                SpinBox { id: maxErpm; from: 100; to: 100000; stepSize: 100; value: 5000; editable: true }
+            }
+            Label { text: "Speed: " + Math.round(rpmSlider.value * maxErpm.value) + " ERPM" }
+            Slider {
+                id: rpmSlider
+                Layout.fillWidth: true
+                from: -1.0; to: 1.0; value: 0.0; stepSize: 0.01
+                enabled: mode === 3
+                onPressedChanged: if (!pressed && springBack.checked) value = 0.0
+            }
 
-        Label {
-            id: valuesLabel
-            Layout.fillWidth: true
-            text: "ERPM: -   Motor current: -   Duty: -"
-            font.pointSize: 12
-        }
-
-        Item {
-            Layout.fillHeight: true
+            // ------------------------------------------------ values
+            Label {
+                id: valuesLabel
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                text: "ERPM: -   Motor current: -   Duty: -"
+                font.pointSize: 12
+            }
         }
     }
 
     Timer {
         interval: 20
-        running: enable.checked
+        running: mode !== 0
         repeat: true
-        onTriggered: mCommands.setCurrentRel(throttle.value)
+        onTriggered: sendNow()
     }
 
     Timer {
