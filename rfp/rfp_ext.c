@@ -40,6 +40,7 @@ typedef enum {
 static rfp_config m_conf;
 static volatile bool m_basic_duty = false;
 static volatile int m_adc_ctrl = RFP_ADC_CTRL_APP;
+static volatile bool m_adc_prio = true;
 static thread_t *m_thread = NULL;
 
 // Stored request
@@ -53,7 +54,8 @@ static bool m_coast = false;
 
 // Braking / reverse state
 static phase_t m_phase = PH_FWD;
-static float m_rev_level = 0.0;			// reverse current or duty (ramped, magnitude)
+static float m_rev_level = 0.0;			// reverse current, duty or duty limit (ramped, magnitude)
+static float m_rev_duty_f = 0.0;		// reverse duty, filtered (Current, Duty Limited)
 
 // Re-press to reverse state
 static bool m_rev_armed = false;		// reverse armed: the next press reverses
@@ -115,9 +117,10 @@ static void sanitize(rfp_config *c) {
 	c->hybrid_enable = c->hybrid_enable != 0;
 	c->braking_reverse_enable = c->braking_reverse_enable != 0;
 	c->rev_repress = c->rev_repress != 0;
+	c->adc_brake_priority = c->adc_brake_priority != 0;
 	c->tractor_enable = c->tractor_enable != 0;
 	if (c->braking_mode > 1) c->braking_mode = 0;
-	if (c->reverse_mode > 2) c->reverse_mode = 0;
+	if (c->reverse_mode > 3) c->reverse_mode = 0;
 	if (c->tractor_mode > 1) c->tractor_mode = 0;
 	if (c->tractor_speed_mode > 1) c->tractor_speed_mode = 0;
 	if (c->adc_ctrl_type > 1) c->adc_ctrl_type = 0;
@@ -131,6 +134,7 @@ static void apply(const rfp_config *c) {
 	m_conf = *c;
 	m_basic_duty = c->basic_duty_enable;
 	m_adc_ctrl = c->adc_ctrl_type;
+	m_adc_prio = c->adc_brake_priority;
 	if (!rel_functions_on(c)) {
 		m_req_active = false;
 	}
@@ -295,8 +299,10 @@ static void set_phase(phase_t ph) {
 		m_trans_left = 0.0;
 	}
 	if (ph == PH_REV) {
-		// Duty: the ramp starts from the present reverse duty (no jerk when already reversing)
-		m_rev_level = m_conf.reverse_mode == 2 ? fmaxf(-mc_interface_get_duty_cycle_now(), 0.0) : 0.0;
+		// Duty, duty limit: the ramp starts from the present reverse duty (no jerk when already reversing)
+		const float rev_duty = fmaxf(-mc_interface_get_duty_cycle_now(), 0.0);
+		m_rev_level = m_conf.reverse_mode >= 2 ? rev_duty : 0.0;
+		m_rev_duty_f = rev_duty;
 	}
 	m_phase = ph;
 }
@@ -493,6 +499,19 @@ void rfp_ext_update(float dt) {
 		out_duty(-rev_ramp(-v * d_max, d_max, dt));
 	} break;
 
+	case 3: { // Current, Duty Limited: full current, released above a duty limit set by the request
+		const float lim_full = c->rev_duty_max * cfg->l_max_duty;
+		const float lim = rev_ramp(-v * lim_full, lim_full, dt);
+		float k = dt / 0.005;
+		utils_truncate_number(&k, 0.0, 1.0);
+		m_rev_duty_f += (-duty - m_rev_duty_f) * k;
+		// Soft zone sized on the full limit (never narrow near zero: no on / off chatter)
+		const float band = fmaxf(c->rev_band * lim_full, 0.01);
+		float f = (lim - m_rev_duty_f) / band;
+		utils_truncate_number(&f, 0.0, 1.0);
+		out_current_rel(blend(-c->rev_cur_max * f, dt), v);
+	} break;
+
 	default: { // Current (official with the default limits)
 		float out = -rev_ramp(-v * c->rev_cur_max, c->rev_cur_max, dt);
 		if (c->rev_duty_max < 0.999) {
@@ -546,8 +565,11 @@ int rfp_ext_adc_ctrl(void) {
 float rfp_ext_adc_signed(float adc1, float adc2, float deadband) {
 	utils_truncate_number(&adc1, 0.0, 1.0);
 	utils_truncate_number(&adc2, 0.0, 1.0);
-	// Brake priority: ADC2 pressed cancels the throttle
-	return adc2 > deadband ? -adc2 : adc1;
+	if (m_adc_prio) {
+		// Brake priority: ADC2 pressed cancels the throttle
+		return adc2 > deadband ? -adc2 : adc1;
+	}
+	return adc1 - adc2;
 }
 
 bool rfp_ext_current_rel(float *val) {

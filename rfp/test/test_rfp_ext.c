@@ -306,17 +306,39 @@ int main(void) {
 	req(-0.57f); m_current_calls = 0; run(1);
 	check("Reverse Duty, release (1.4 % of duty): released, no braking", m_current_calls == 1 && near(m_set_current, 0.0f, 1e-6));
 
+	printf("== Reverse Current, Duty Limited (max duty 0.95, limit 40 %%, current 50 %%, soft zone 10 %%)\n");
+	rfp_conf_set_defaults(&c);
+	c.braking_reverse_enable = 1; c.reverse_mode = 3; c.rev_duty_max = 0.4f; c.rev_cur_max = 0.5f;
+	c.rev_band = 0.1f; c.rev_transition = 0.0f;
+	configure(&c);
+	m_rpm = 0; m_duty = 0.0f; req(0.0f); run(1);
+	req(-0.2f); run(1);
+	check("20 % request at standstill: full reverse current at once", near(rel_out(), -0.5f, 1e-4));
+	req(-1.0f); m_duty = -0.2f; m_rpm = -2000; run(50);
+	check("far below the limit (0.38): full current", near(rel_out(), -0.5f, 1e-4));
+	m_duty = -0.361f; run(50);
+	check("in the soft zone (half way): half current", near(rel_out(), -0.25f, 0.01));
+	req(-0.5f); run(50);
+	check("request reduced, limit below the duty: zero current (released, no braking)", near(m_set_current, 0.0f, 1e-5));
+	m_duty = -0.0475f; req(-0.05f); run(50);    // small limit 0.019, duty at 0.0475
+	check("small limit: still zero current, no chatter", near(m_set_current, 0.0f, 1e-5));
+	m_duty = -0.010f; run(50);
+	check("small limit, duty below it: smooth partial current (wide soft zone)", rel_out() < -0.1f && rel_out() > -0.5f);
+
 	printf("== ADC control type\n");
 	rfp_conf_set_defaults(&c);
 	configure(&c);
 	check("default: Control Type of the ADC app", rfp_ext_adc_ctrl() == RFP_ADC_CTRL_APP);
 	c.adc_ctrl_type = 1;
 	configure(&c);
-	check("Current Signed, Brake Priority selected", rfp_ext_adc_ctrl() == RFP_ADC_CTRL_SIGNED_BRAKE_PRIO);
+	check("Current Reverse ADC2 selected (Brake Priority on by default)", rfp_ext_adc_ctrl() == RFP_ADC_CTRL_CURRENT_REV_ADC2);
 	check("ADC1 alone: forward request", near(rfp_ext_adc_signed(0.7f, 0.0f, 0.15f), 0.7f, 1e-6));
 	check("ADC2 alone: reverse request", near(rfp_ext_adc_signed(0.0f, 0.6f, 0.15f), -0.6f, 1e-6));
 	check("both pressed: brake wins, throttle cut", near(rfp_ext_adc_signed(1.0f, 0.3f, 0.15f), -0.3f, 1e-6));
 	check("ADC2 within the deadband: throttle kept", near(rfp_ext_adc_signed(0.8f, 0.1f, 0.15f), 0.8f, 1e-6));
+	c.adc_brake_priority = 0;
+	configure(&c);
+	check("Brake Priority off: ADC1 - ADC2", near(rfp_ext_adc_signed(1.0f, 0.3f, 0.15f), 0.7f, 1e-6));
 	c.adc_ctrl_type = 7;
 	configure(&c);
 	check("invalid ADC control type sanitized", rfp_ext_adc_ctrl() == RFP_ADC_CTRL_APP);

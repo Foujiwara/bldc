@@ -87,22 +87,27 @@ PARAMS = [
       "Reverse request below Stop ERPM (stopped or already reversing). Current: reverse in current up to Reverse "
       "Current Max, top reverse speed limited by Reverse Max Duty (100 % = official firmware). None: never "
       "reverse, zero current. Duty: reverse duty = request x Reverse Max Duty; Basic Duty Mode applies when the "
-      "request is released. Both rise with Reverse Ramp Time.",
-      ["Current", "None", "Duty"]),
+      "request is released. Current, Duty Limited: reverse at Reverse Current Max (no ramp, immediate torque), "
+      "speed capped by a duty limit = request x Reverse Max Duty; the current decreases over the Soft Zone below "
+      "the limit and is zero above it (released, never braking). Reverse Ramp Time ramps the current (Current), "
+      "the duty (Duty) or the duty limit (Current, Duty Limited).",
+      ["Current", "None", "Duty", "Current, Duty Limited"]),
     F("rev_cur_max", "Reverse Current Max",
-      "Current: reverse current at full request, as a fraction of the motor current limit.",
+      "Current: reverse current at full request. Current, Duty Limited: reverse current. Fraction of the motor "
+      "current limit.",
       1.0, 0.0, 1.0, 0.01, 0, " %", True),
     F("rev_duty_max", "Reverse Max Duty",
       "Fraction of Maximum Duty Cycle. Current: top reverse speed (100 % = no limit). Duty: duty at full "
-      "reverse request.", 1.0, 0.02, 1.0, 0.01, 0, " %", True),
+      "reverse request. Current, Duty Limited: duty limit at full reverse request.", 1.0, 0.02, 1.0, 0.01, 0, " %", True),
     F("rev_band", "Soft Zone Before Reverse Limit",
-      "Current: zone below the top reverse speed (Reverse Max Duty), as a part of it, where the current "
-      "decreases progressively to zero.", 0.15, 0.02, 0.6, 0.01, 0, " %", True),
+      "Current and Current, Duty Limited: zone below the duty limit, as a part of Reverse Max Duty, where the "
+      "current decreases progressively to zero.", 0.15, 0.02, 0.6, 0.01, 0, " %", True),
     F("rev_ramp", "Reverse Ramp Time",
-      "Time for the reverse current (Current) or duty (Duty) to rise from 0 to its full value. It falls at once "
+      "Time for the reverse current (Current), duty (Duty) or duty limit (Current, Duty Limited) to rise from 0 "
+      "to its full value. It falls at once "
       "when the request is reduced. 0 = no ramp (official).", 0.0, 0.0, 20.0, 0.1, 2, " s"),
     B("rev_repress", "Re-press to Reverse",
-      "Current, Duty: braking never turns into reverse. To reverse: stopped, release to neutral, press "
+      "Current, Duty, Current Duty Limited: braking never turns into reverse. To reverse: stopped, release to neutral, press "
       "the brake once (above Reverse Arm Level) and release: reverse is armed, the next press reverses. Neutral "
       "longer than Reverse Disarm Time, or any throttle, disarms."),
     F("rev_arm_level", "Reverse Arm Level",
@@ -149,17 +154,20 @@ PARAMS = [
     E("adc_ctrl_type", "ADC Control Type",
       "Replaces the Control Type of the ADC app (App to Use = ADC); all the other ADC app settings (voltages, "
       "filter, deadband, throttle curves, ramps, safe start, cruise button, multiple ESCs, traction control) "
-      "still apply. App ADC Setting: the Control Type of the ADC app is used. Current Signed, Brake Priority: "
+      "still apply. App ADC Setting: the Control Type of the ADC app is used. Current Reverse ADC2: "
       "ADC1 = forward, ADC2 = reverse, sent as a signed relative current (-100 % to +100 %), so the Braking / "
-      "Reverse settings handle ADC2. When ADC2 is pressed (above the ADC app deadband) ADC1 is ignored. "
+      "Reverse settings handle ADC2 (see ADC2 Brake Priority). "
       "ADC1 uses the linear mapping (Start / End voltages, no center).",
-      ["App ADC Setting", "Current Signed, Brake Priority"]),
+      ["App ADC Setting", "Current Reverse ADC2"]),
+    B("adc_brake_priority", "ADC2 Brake Priority",
+      "Current Reverse ADC2: On: when ADC2 is pressed (above the ADC app deadband) ADC1 is ignored. Off: request "
+      "= ADC1 - ADC2.", 1),
 ]
 
 # page : groupe "General" (seul groupe lu par VESC Tool) -> onglets -> elements
 GROUPING = [
     ("General", [
-        ("ADC", ["::sep::ADC Control Type", "adc_ctrl_type"]),
+        ("ADC", ["::sep::ADC Control Type", "adc_ctrl_type", "adc_brake_priority"]),
         ("Duty", ["::sep::Basic Duty Mode", "basic_duty_enable"]),
         ("Forward", ["::sep::Hybrid Current / Duty", "hybrid_enable", "hybrid_duty_limit", "hybrid_band"]),
         ("Braking", ["::sep::Braking / Reverse", "braking_reverse_enable", "stop_erpm", "stop_hyst",

@@ -375,8 +375,8 @@ static THD_FUNCTION(adc_thread, arg) {
 			break;
 		}
 
-		// RFP extras: signed request, ADC1 forward, ADC2 reverse (priority)
-		if (rfp_ctrl == RFP_ADC_CTRL_SIGNED_BRAKE_PRIO) {
+		// RFP extras: signed request, ADC1 forward, ADC2 reverse
+		if (rfp_ctrl == RFP_ADC_CTRL_CURRENT_REV_ADC2) {
 			pwr = rfp_ext_adc_signed(pwr, brake, config.hyst);
 		}
 

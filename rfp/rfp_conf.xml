@@ -237,12 +237,13 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse request below Stop ERPM (stopped or already reversing). Current: reverse in current up to Reverse Current Max, top reverse speed limited by Reverse Max Duty (100 % = official firmware). None: never reverse, zero current. Duty: reverse duty = request x Reverse Max Duty; Basic Duty Mode applies when the request is released. Both rise with Reverse Ramp Time.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Reverse request below Stop ERPM (stopped or already reversing). Current: reverse in current up to Reverse Current Max, top reverse speed limited by Reverse Max Duty (100 % = official firmware). None: never reverse, zero current. Duty: reverse duty = request x Reverse Max Duty; Basic Duty Mode applies when the request is released. Current, Duty Limited: reverse at Reverse Current Max (no ramp, immediate torque), speed capped by a duty limit = request x Reverse Max Duty; the current decreases over the Soft Zone below the limit and is zero above it (released, never braking). Reverse Ramp Time ramps the current (Current), the duty (Duty) or the duty limit (Current, Duty Limited).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_REVERSE_MODE</cDefine>
             <valInt>0</valInt>
             <enumNames>Current</enumNames>
             <enumNames>None</enumNames>
             <enumNames>Duty</enumNames>
+            <enumNames>Current, Duty Limited</enumNames>
         </reverse_mode>
         <rev_cur_max>
             <longName>Reverse Current Max</longName>
@@ -252,7 +253,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Current: reverse current at full request, as a fraction of the motor current limit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Current: reverse current at full request. Current, Duty Limited: reverse current. Fraction of the motor current limit.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_REV_CUR_MAX</cDefine>
             <editorDecimalsDouble>0</editorDecimalsDouble>
             <editorScale>100</editorScale>
@@ -274,7 +275,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Fraction of Maximum Duty Cycle. Current: top reverse speed (100 % = no limit). Duty: duty at full reverse request.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Fraction of Maximum Duty Cycle. Current: top reverse speed (100 % = no limit). Duty: duty at full reverse request. Current, Duty Limited: duty limit at full reverse request.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_REV_DUTY_MAX</cDefine>
             <editorDecimalsDouble>0</editorDecimalsDouble>
             <editorScale>100</editorScale>
@@ -296,7 +297,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Current: zone below the top reverse speed (Reverse Max Duty), as a part of it, where the current decreases progressively to zero.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Current and Current, Duty Limited: zone below the duty limit, as a part of Reverse Max Duty, where the current decreases progressively to zero.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_REV_BAND</cDefine>
             <editorDecimalsDouble>0</editorDecimalsDouble>
             <editorScale>100</editorScale>
@@ -318,7 +319,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Time for the reverse current (Current) or duty (Duty) to rise from 0 to its full value. It falls at once when the request is reduced. 0 = no ramp (official).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Time for the reverse current (Current), duty (Duty) or duty limit (Current, Duty Limited) to rise from 0 to its full value. It falls at once when the request is reduced. 0 = no ramp (official).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_REV_RAMP</cDefine>
             <editorDecimalsDouble>2</editorDecimalsDouble>
             <editorScale>1</editorScale>
@@ -340,7 +341,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Current, Duty: braking never turns into reverse. To reverse: stopped, release to neutral, press the brake once (above Reverse Arm Level) and release: reverse is armed, the next press reverses. Neutral longer than Reverse Disarm Time, or any throttle, disarms.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Current, Duty, Current Duty Limited: braking never turns into reverse. To reverse: stopped, release to neutral, press the brake once (above Reverse Arm Level) and release: reverse is armed, the next press reverses. Neutral longer than Reverse Disarm Time, or any throttle, disarms.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_REV_REPRESS</cDefine>
             <valInt>0</valInt>
         </rev_repress>
@@ -634,12 +635,24 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Replaces the Control Type of the ADC app (App to Use = ADC); all the other ADC app settings (voltages, filter, deadband, throttle curves, ramps, safe start, cruise button, multiple ESCs, traction control) still apply. App ADC Setting: the Control Type of the ADC app is used. Current Signed, Brake Priority: ADC1 = forward, ADC2 = reverse, sent as a signed relative current (-100 % to +100 %), so the Braking / Reverse settings handle ADC2. When ADC2 is pressed (above the ADC app deadband) ADC1 is ignored. ADC1 uses the linear mapping (Start / End voltages, no center).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Replaces the Control Type of the ADC app (App to Use = ADC); all the other ADC app settings (voltages, filter, deadband, throttle curves, ramps, safe start, cruise button, multiple ESCs, traction control) still apply. App ADC Setting: the Control Type of the ADC app is used. Current Reverse ADC2: ADC1 = forward, ADC2 = reverse, sent as a signed relative current (-100 % to +100 %), so the Braking / Reverse settings handle ADC2 (see ADC2 Brake Priority). ADC1 uses the linear mapping (Start / End voltages, no center).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
             <cDefine>RFP_ADC_CTRL_TYPE</cDefine>
             <valInt>0</valInt>
             <enumNames>App ADC Setting</enumNames>
-            <enumNames>Current Signed, Brake Priority</enumNames>
+            <enumNames>Current Reverse ADC2</enumNames>
         </adc_ctrl_type>
+        <adc_brake_priority>
+            <longName>ADC2 Brake Priority</longName>
+            <type>5</type>
+            <transmittable>1</transmittable>
+            <description>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Roboto'; ; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Current Reverse ADC2: On: when ADC2 is pressed (above the ADC app deadband) ADC1 is ignored. Off: request = ADC1 - ADC2.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</description>
+            <cDefine>RFP_ADC_BRAKE_PRIORITY</cDefine>
+            <valInt>1</valInt>
+        </adc_brake_priority>
     </Params>
     <SerOrder>
         <ser>basic_duty_enable</ser>
@@ -674,6 +687,7 @@ p, li { white-space: pre-wrap; }
         <ser>tractor_duty_brake</ser>
         <ser>tractor_max_duty</ser>
         <ser>adc_ctrl_type</ser>
+        <ser>adc_brake_priority</ser>
     </SerOrder>
     <Grouping>
         <group>
@@ -683,6 +697,7 @@ p, li { white-space: pre-wrap; }
                 <subgroupParams>
                     <param>::sep::ADC Control Type</param>
                     <param>adc_ctrl_type</param>
+                    <param>adc_brake_priority</param>
                 </subgroupParams>
             </subgroup>
             <subgroup>

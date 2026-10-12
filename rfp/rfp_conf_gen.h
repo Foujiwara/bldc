@@ -6,10 +6,10 @@
 #include <stdbool.h>
 
 // braking_mode : 0 = Active (negative current), 1 = Regen Only (brake)
-// reverse_mode : 0 = Current, 1 = None, 2 = Duty
+// reverse_mode : 0 = Current, 1 = None, 2 = Duty, 3 = Current, Duty Limited
 // tractor_mode : 0 = Spring Current, 1 = Spring Duty
 // tractor_speed_mode : 0 = Throttle, 1 = Preset
-// adc_ctrl_type : 0 = App ADC Setting, 1 = Current Signed, Brake Priority
+// adc_ctrl_type : 0 = App ADC Setting, 1 = Current Reverse ADC2
 
 typedef struct {
 	bool basic_duty_enable;
@@ -44,11 +44,12 @@ typedef struct {
 	float tractor_duty_brake;
 	float tractor_max_duty;
 	uint8_t adc_ctrl_type;
+	bool adc_brake_priority;
 } rfp_config;
 
-#define RFP_CONFIG_SIGNATURE	1888635117u
-#define RFP_CONF_SER_SIZE	102
-#define RFP_CONF_XML_SIZE	4965
+#define RFP_CONFIG_SIGNATURE	3196129770u
+#define RFP_CONF_SER_SIZE	103
+#define RFP_CONF_XML_SIZE	5145
 
 int32_t rfp_conf_serialize(uint8_t *buffer, const rfp_config *conf);
 bool rfp_conf_deserialize(const uint8_t *buffer, rfp_config *conf);
