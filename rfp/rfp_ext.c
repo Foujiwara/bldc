@@ -39,6 +39,7 @@ typedef enum {
 
 static rfp_config m_conf;
 static volatile bool m_basic_duty = false;
+static volatile int m_adc_ctrl = RFP_ADC_CTRL_APP;
 static thread_t *m_thread = NULL;
 
 // Stored request
@@ -110,6 +111,7 @@ static void sanitize(rfp_config *c) {
 	if (c->reverse_mode > 3) c->reverse_mode = 0;
 	if (c->tractor_mode > 1) c->tractor_mode = 0;
 	if (c->tractor_speed_mode > 1) c->tractor_speed_mode = 0;
+	if (c->adc_ctrl_type > 1) c->adc_ctrl_type = 0;
 }
 
 static bool rel_functions_on(const rfp_config *c) {
@@ -119,6 +121,7 @@ static bool rel_functions_on(const rfp_config *c) {
 static void apply(const rfp_config *c) {
 	m_conf = *c;
 	m_basic_duty = c->basic_duty_enable;
+	m_adc_ctrl = c->adc_ctrl_type;
 	if (!rel_functions_on(c)) {
 		m_req_active = false;
 	}
@@ -439,6 +442,17 @@ void rfp_ext_init(void) {
 
 bool rfp_ext_basic_duty(void) {
 	return m_basic_duty;
+}
+
+int rfp_ext_adc_ctrl(void) {
+	return m_adc_ctrl;
+}
+
+float rfp_ext_adc_signed(float adc1, float adc2, float deadband) {
+	utils_truncate_number(&adc1, 0.0, 1.0);
+	utils_truncate_number(&adc2, 0.0, 1.0);
+	// Brake priority: ADC2 pressed cancels the throttle
+	return adc2 > deadband ? -adc2 : adc1;
 }
 
 bool rfp_ext_current_rel(float *val) {

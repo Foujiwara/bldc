@@ -147,11 +147,21 @@ PARAMS = [
       "Spring Duty: duty against the speed difference to the anchor, per 1000 ERPM.", 0.02, 0.0, 1.0, 0.001, 3, " /kERPM"),
     F("tractor_max_duty", "Tractor Max Duty", "Spring Duty: duty limit, as a fraction of Maximum Duty Cycle.",
       0.3, 0.02, 1.0, 0.01, 0, " %", True),
+    # ---------------------------------------------------------------- adc
+    E("adc_ctrl_type", "ADC Control Type",
+      "Replaces the Control Type of the ADC app (App to Use = ADC); all the other ADC app settings (voltages, "
+      "filter, deadband, throttle curves, ramps, safe start, cruise button, multiple ESCs, traction control) "
+      "still apply. App ADC Setting: the Control Type of the ADC app is used. Current Signed, Brake Priority: "
+      "ADC1 = forward, ADC2 = reverse, sent as a signed relative current (-100 % to +100 %), so the Braking / "
+      "Reverse settings handle ADC2. When ADC2 is pressed (above the ADC app deadband) ADC1 is ignored. "
+      "ADC1 uses the linear mapping (Start / End voltages, no center).",
+      ["App ADC Setting", "Current Signed, Brake Priority"]),
 ]
 
 # page : groupe "General" (seul groupe lu par VESC Tool) -> onglets -> elements
 GROUPING = [
     ("General", [
+        ("ADC", ["::sep::ADC Control Type", "adc_ctrl_type"]),
         ("Duty", ["::sep::Basic Duty Mode", "basic_duty_enable"]),
         ("Forward", ["::sep::Hybrid Current / Duty", "hybrid_enable", "hybrid_duty_limit", "hybrid_band"]),
         ("Braking / Reverse", ["::sep::Braking / Reverse", "braking_reverse_enable", "stop_erpm", "stop_hyst",

@@ -9,6 +9,7 @@
 // reverse_mode : 0 = Current, 1 = None, 2 = Duty, 3 = Smart
 // tractor_mode : 0 = Spring Current, 1 = Spring Duty
 // tractor_speed_mode : 0 = Throttle, 1 = Preset
+// adc_ctrl_type : 0 = App ADC Setting, 1 = Current Signed, Brake Priority
 
 typedef struct {
 	bool basic_duty_enable;
@@ -43,11 +44,12 @@ typedef struct {
 	float tractor_duty_stiffness;
 	float tractor_duty_brake;
 	float tractor_max_duty;
+	uint8_t adc_ctrl_type;
 } rfp_config;
 
-#define RFP_CONFIG_SIGNATURE	2680818977u
-#define RFP_CONF_SER_SIZE	105
-#define RFP_CONF_XML_SIZE	4413
+#define RFP_CONFIG_SIGNATURE	1245399714u
+#define RFP_CONF_SER_SIZE	106
+#define RFP_CONF_XML_SIZE	4762
 
 int32_t rfp_conf_serialize(uint8_t *buffer, const rfp_config *conf);
 bool rfp_conf_deserialize(const uint8_t *buffer, rfp_config *conf);

@@ -30,6 +30,7 @@
 #include "utils_sys.h"
 #include "comm_can.h"
 #include "hw.h"
+#include "rfp_ext.h"
 #include <math.h>
 
 // Settings
@@ -181,6 +182,9 @@ static THD_FUNCTION(adc_thread, arg) {
 			return;
 		}
 
+		// RFP extras: ADC control type set on the RFP Extras page (0 = Control Type of this app)
+		const int rfp_ctrl = rfp_ext_adc_ctrl();
+
 		// For safe start when fault codes occur
 		if (mc_interface_get_fault() != FAULT_CODE_NONE && config.safe_start != SAFE_START_NO_FAULT) {
 			ms_without_power = 0;
@@ -206,8 +210,8 @@ static THD_FUNCTION(adc_thread, arg) {
 
 		range_ok = read_voltage >= config.voltage_min && read_voltage <= config.voltage_max;
 
-		// Map the read voltage
-		switch (config.ctrl_type) {
+		// Map the read voltage (RFP ADC control types: linear mapping)
+		switch (rfp_ctrl ? ADC_CTRL_TYPE_NONE : config.ctrl_type) {
 		case ADC_CTRL_TYPE_CURRENT_REV_CENTER:
 		case ADC_CTRL_TYPE_CURRENT_REV_BUTTON_BRAKE_CENTER:
 		case ADC_CTRL_TYPE_CURRENT_NOREV_BRAKE_CENTER:
@@ -341,7 +345,7 @@ static THD_FUNCTION(adc_thread, arg) {
 			continue;
 		}
 
-		switch (config.ctrl_type) {
+		switch (rfp_ctrl ? ADC_CTRL_TYPE_NONE : config.ctrl_type) {
 		case ADC_CTRL_TYPE_CURRENT_REV_CENTER:
 		case ADC_CTRL_TYPE_CURRENT_REV_BUTTON_BRAKE_CENTER:
 		case ADC_CTRL_TYPE_CURRENT_NOREV_BRAKE_CENTER:
@@ -371,6 +375,11 @@ static THD_FUNCTION(adc_thread, arg) {
 			break;
 		}
 
+		// RFP extras: signed request, ADC1 forward, ADC2 reverse (priority)
+		if (rfp_ctrl == RFP_ADC_CTRL_SIGNED_BRAKE_PRIO) {
+			pwr = rfp_ext_adc_signed(pwr, brake, config.hyst);
+		}
+
 		// Apply deadband
 		utils_deadband(&pwr, config.hyst, 1.0);
 
@@ -397,7 +406,16 @@ static THD_FUNCTION(adc_thread, arg) {
 		bool send_duty = false;
 
 		// Use the filtered and mapped voltage for control according to the configuration.
-		switch (config.ctrl_type) {
+		if (rfp_ctrl) {
+			// RFP extras: signed relative current, the reverse part is handled by the
+			// Braking / Reverse settings of the RFP Extras page
+			current_mode = true;
+			current_rel = pwr;
+
+			if (fabsf(pwr) < 0.001) {
+				ms_without_power += (1000.0 * (float)sleep_time) / (float)CH_CFG_ST_FREQUENCY;
+			}
+		} else switch (config.ctrl_type) {
 		case ADC_CTRL_TYPE_CURRENT:
 		case ADC_CTRL_TYPE_CURRENT_REV_CENTER:
 		case ADC_CTRL_TYPE_CURRENT_REV_BUTTON:

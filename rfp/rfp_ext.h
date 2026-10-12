@@ -12,6 +12,8 @@
 	    reverse requests, with their limits.
 	  - Tractor mode: virtual spring on the wheel position around an anchor that moves with
 	    the throttle (current or duty output).
+	  - ADC control type: replaces the Control Type of the ADC app (signed current from ADC1
+	    forward and ADC2 reverse, brake priority).
 
 	Hybrid, braking, reverse and tractor act on relative current requests
 	(mc_interface_set_current_rel: ADC and PPM apps, VESC Remote, PAS, CAN).
@@ -43,5 +45,15 @@ void rfp_ext_cancel(void);
 // One step of the continuous computation (called every millisecond by the RFP thread; exported
 // for tests).
 void rfp_ext_update(float dt);
+
+// ADC control types (read by the ADC app): 0 = Control Type of the ADC app, 1 = signed relative
+// current, ADC1 forward, ADC2 reverse with priority.
+#define RFP_ADC_CTRL_APP				0
+#define RFP_ADC_CTRL_SIGNED_BRAKE_PRIO	1
+int rfp_ext_adc_ctrl(void);
+
+// Signed request (-1 to 1) from the decoded ADC1 and ADC2 levels (0 to 1) for the RFP ADC control
+// types. ADC2 above the deadband cancels ADC1.
+float rfp_ext_adc_signed(float adc1, float adc2, float deadband);
 
 #endif /* RFP_EXT_H_ */

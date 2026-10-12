@@ -237,6 +237,21 @@ int main(void) {
 	m_tacho = -5; run(1);
 	check("Spring Duty: duty pulls forward (0.24)", m_duty_calls == 2 && near(m_set_duty, 0.24f, 1e-4));
 
+	printf("== ADC control type\n");
+	rfp_conf_set_defaults(&c);
+	configure(&c);
+	check("default: Control Type of the ADC app", rfp_ext_adc_ctrl() == RFP_ADC_CTRL_APP);
+	c.adc_ctrl_type = 1;
+	configure(&c);
+	check("Current Signed, Brake Priority selected", rfp_ext_adc_ctrl() == RFP_ADC_CTRL_SIGNED_BRAKE_PRIO);
+	check("ADC1 alone: forward request", near(rfp_ext_adc_signed(0.7f, 0.0f, 0.15f), 0.7f, 1e-6));
+	check("ADC2 alone: reverse request", near(rfp_ext_adc_signed(0.0f, 0.6f, 0.15f), -0.6f, 1e-6));
+	check("both pressed: brake wins, throttle cut", near(rfp_ext_adc_signed(1.0f, 0.3f, 0.15f), -0.3f, 1e-6));
+	check("ADC2 within the deadband: throttle kept", near(rfp_ext_adc_signed(0.8f, 0.1f, 0.15f), 0.8f, 1e-6));
+	c.adc_ctrl_type = 7;
+	configure(&c);
+	check("invalid ADC control type sanitized", rfp_ext_adc_ctrl() == RFP_ADC_CTRL_APP);
+
 	printf("== Configuration page and storage\n");
 	rfp_conf_set_defaults(&c);
 	c.basic_duty_enable = 1; c.braking_reverse_enable = 1; c.reverse_mode = 3; c.braking_mode = 1;
