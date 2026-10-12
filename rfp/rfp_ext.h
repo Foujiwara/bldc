@@ -38,6 +38,11 @@ bool rfp_ext_basic_duty(void);
 // last request every millisecond. Otherwise false is returned and nothing changes.
 bool rfp_ext_current_rel(float *val);
 
+// Called by mc_interface_set_duty. With Basic Duty Mode the request is stored and true is returned:
+// the RFP thread releases the motor (zero current) while the request is below the present duty and
+// follows it in duty otherwise. Otherwise (or from the RFP thread) false is returned.
+bool rfp_ext_duty(float duty);
+
 // Called by every other mc_interface motor command (current, brake, duty, release...): stops the
 // continuous computation, so that command takes over (commands from the RFP thread are ignored).
 void rfp_ext_cancel(void);

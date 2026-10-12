@@ -266,6 +266,46 @@ int main(void) {
 	m_tacho = -5; run(1);
 	check("Spring Duty: duty pulls forward (0.24)", m_duty_calls == 2 && near(m_set_duty, 0.24f, 1e-4));
 
+	printf("== Basic Duty Mode: real release (forward and reverse)\n");
+	rfp_conf_set_defaults(&c);
+	configure(&c);
+	stub_self = &stub_app_thread;
+	check("Basic Duty off: duty request not stored (official path)", !rfp_ext_duty(0.3f));
+	c.basic_duty_enable = 1;
+	configure(&c);
+	m_duty = 0.30f; m_duty_calls = 0; m_current_calls = 0;
+	check("Basic Duty on: duty request stored", rfp_ext_duty(0.30f));
+	run(3);
+	check("request = present duty: duty control", m_duty_calls == 3 && near(m_set_duty, 0.30f, 1e-6));
+	rfp_ext_duty(0.297f); run(1);
+	check("slow release (0.3 % below): no braking clamp needed yet, still duty", near(m_set_duty, 0.297f, 1e-6));
+	m_duty = 0.297f; rfp_ext_duty(0.290f); m_current_calls = 0; run(1);
+	check("0.7 % below the present duty: released (zero current)", m_current_calls == 1 && near(m_set_current, 0.0f, 1e-6));
+	m_duty = 0.20f; rfp_ext_duty(0.25f); m_duty_calls = 0; run(1);
+	check("duty fell below the request: duty control again", m_duty_calls == 1 && near(m_set_duty, 0.25f, 1e-6));
+	m_duty = 0.25f; rfp_ext_duty(0.0f); m_current_calls = 0; run(5);
+	check("zero request: released", m_current_calls == 5 && near(m_set_current, 0.0f, 1e-6));
+	m_duty = -0.30f; rfp_ext_duty(-0.20f); m_current_calls = 0; run(1);
+	check("reverse, request reduced: released", m_current_calls == 1 && near(m_set_current, 0.0f, 1e-6));
+	m_duty = 0.30f; rfp_ext_duty(-0.20f); m_current_calls = 0; run(1);
+	check("opposite request while rolling: released (no braking)", m_current_calls == 1);
+	m_duty = 0.005f; m_duty_calls = 0; run(1);
+	check("... then reverse duty once stopped", m_duty_calls == 1 && near(m_set_duty, -0.20f, 1e-6));
+	stub_self = &stub_app_thread;
+	mc_interface_set_brake_current_rel(0.5f);
+	m_duty_calls = 0; m_current_calls = 0; run(3);
+	check("another command: stored duty stops", m_duty_calls == 0 && m_current_calls == 0);
+
+	rfp_conf_set_defaults(&c);
+	c.basic_duty_enable = 1; c.braking_reverse_enable = 1; c.reverse_mode = 2; c.rev_duty_max = 0.5f;
+	c.rev_transition = 0.0f;
+	configure(&c);
+	m_rpm = 0; m_duty = 0.0f; req(0.0f); run(1);
+	req(-0.6f); run(5);
+	m_duty = -0.6f * 0.5f * 0.95f; m_rpm = -3000; run(1);
+	req(-0.57f); m_current_calls = 0; run(1);
+	check("Reverse Duty, release (1.4 % of duty): released, no braking", m_current_calls == 1 && near(m_set_current, 0.0f, 1e-6));
+
 	printf("== ADC control type\n");
 	rfp_conf_set_defaults(&c);
 	configure(&c);

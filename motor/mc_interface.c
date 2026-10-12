@@ -557,6 +557,9 @@ mc_control_mode mc_interface_get_control_mode(void) {
 }
 
 void mc_interface_set_duty(float dutyCycle) {
+	if (rfp_ext_duty(dutyCycle)) {
+		return; // RFP extras: Basic Duty Mode, computed by the RFP thread
+	}
 	rfp_ext_cancel(); // RFP extras: another command takes over
 	if (fabsf(dutyCycle) > 0.001) {
 		SHUTDOWN_RESET();

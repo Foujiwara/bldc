@@ -46,6 +46,11 @@ static thread_t *m_thread = NULL;
 static volatile float m_req = 0.0;
 static volatile bool m_req_active = false;
 
+// Stored duty request (Basic Duty Mode)
+static volatile float m_duty_req = 0.0;
+static volatile bool m_duty_active = false;
+static bool m_coast = false;
+
 // Braking / reverse state
 static phase_t m_phase = PH_FWD;
 static float m_rev_level = 0.0;			// reverse current or duty (ramped, magnitude)
@@ -128,6 +133,9 @@ static void apply(const rfp_config *c) {
 	m_adc_ctrl = c->adc_ctrl_type;
 	if (!rel_functions_on(c)) {
 		m_req_active = false;
+	}
+	if (!c->basic_duty_enable) {
+		m_duty_active = false;
 	}
 }
 
@@ -215,6 +223,46 @@ static void out_current_rel(float out, float req) {
 	}
 
 	m_last_out = out;
+}
+
+// Duty to the motor. Basic Duty Mode: a request behind the present duty (in the direction of the
+// motion) releases the motor (zero current, no braking) until the duty has fallen to it; a zero
+// request releases it completely. Release starts 0.5 % behind, the duty control resumes when the
+// duty has reached the request (no current step).
+#define COAST_START		0.005
+
+static void out_duty(float d) {
+	m_last_out = 0.0;
+
+	if (!m_basic_duty) {
+		m_coast = false;
+		mc_interface_set_duty(d);
+		return;
+	}
+
+	if (fabsf(d) < 0.001) {
+		m_coast = true;
+		mc_interface_set_current(0.0);
+		return;
+	}
+
+	const float now = mc_interface_get_duty_cycle_now();
+	const float behind = now >= 0.0 ? now - d : d - now;
+
+	if (m_coast) {
+		if (behind <= 0.0 || fabsf(now) < 0.01) {
+			m_coast = false;
+		}
+	} else if (behind > COAST_START && fabsf(now) >= 0.01) {
+		m_coast = true;
+	}
+
+	if (m_coast) {
+		mc_interface_set_current(0.0);
+		mc_interface_set_current_off_delay(0.1);	// bridge on: the present duty stays known
+	} else {
+		mc_interface_set_duty(d);
+	}
 }
 
 // Taper factor: 1 below the limit minus the band, 0 at the limit
@@ -355,6 +403,12 @@ static float rev_ramp(float goal, float full, float dt) {
 void rfp_ext_update(float dt) {
 	const rfp_config *c = &m_conf;
 
+	if (m_duty_active) {
+		m_tr_active = false;
+		out_duty(m_duty_req);
+		return;
+	}
+
 	if (!m_req_active || !rel_functions_on(c)) {
 		m_tr_active = false;
 		return;
@@ -436,8 +490,7 @@ void rfp_ext_update(float dt) {
 
 	case 2: { // Duty (falls at once: Basic Duty Mode applies)
 		const float d_max = c->rev_duty_max * cfg->l_max_duty;
-		mc_interface_set_duty(-rev_ramp(-v * d_max, d_max, dt));
-		m_last_out = 0.0;
+		out_duty(-rev_ramp(-v * d_max, d_max, dt));
 	} break;
 
 	default: { // Current (official with the default limits)
@@ -517,7 +570,23 @@ bool rfp_ext_current_rel(float *val) {
 	}
 
 	m_req = *val;
+	m_duty_active = false;
 	m_req_active = true;
+	return true;
+}
+
+bool rfp_ext_duty(float duty) {
+	if (!m_basic_duty || (m_thread != NULL && chThdGetSelfX() == m_thread)) {
+		return false;
+	}
+
+	if (!m_duty_active) {
+		m_coast = false;
+	}
+
+	m_req_active = false;
+	m_duty_req = duty;
+	m_duty_active = true;
 	return true;
 }
 
@@ -527,4 +596,5 @@ void rfp_ext_cancel(void) {
 		return;
 	}
 	m_req_active = false;
+	m_duty_active = false;
 }
